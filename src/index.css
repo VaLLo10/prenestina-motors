@@ -1,0 +1,392 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Keyframes ──────────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.animate-fadeUp      { animation: fadeUp 0.22s ease-out both; }
+.animate-slideInRight{ animation: slideInRight 0.22s ease-out both; }
+.animate-scaleIn     { animation: scaleIn 0.18s ease-out both; }
+.animate-fadeIn      { animation: fadeIn 0.2s ease-out both; }
+
+/* stagger figli per liste */
+.stagger-children > * { animation: fadeUp 0.2s ease-out both; }
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 40ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 80ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 120ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 160ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 200ms; }
+.stagger-children > *:nth-child(7) { animation-delay: 240ms; }
+.stagger-children > *:nth-child(8) { animation-delay: 280ms; }
+
+/* smooth scroll */
+* { scroll-behavior: smooth; }
+
+/* selezione testo colore Apple */
+::selection { background: rgba(0,113,227,0.2); }
+
+/* ── Liquid Glass ────────────────────────────────────────────────── */
+
+/* Background con blob colorati (necessari perché il blur abbia qualcosa su cui agire) */
+.pm-glass-bg {
+  background:
+    radial-gradient(ellipse 55% 45% at 15% 25%, rgba(99,179,255,0.18) 0%, transparent 65%),
+    radial-gradient(ellipse 45% 55% at 85% 75%, rgba(255,120,200,0.12) 0%, transparent 65%),
+    radial-gradient(ellipse 60% 40% at 65% 10%, rgba(100,255,200,0.10) 0%, transparent 65%),
+    radial-gradient(ellipse 40% 60% at 30% 80%, rgba(200,150,255,0.10) 0%, transparent 65%),
+    #f0f2f7;
+}
+.pm-dark .pm-glass-bg,
+.pm-dark.pm-glass-bg {
+  background:
+    radial-gradient(ellipse 55% 45% at 15% 25%, rgba(0,60,160,0.18) 0%, transparent 65%),
+    radial-gradient(ellipse 45% 55% at 85% 75%, rgba(120,0,90,0.14) 0%, transparent 65%),
+    radial-gradient(ellipse 60% 40% at 65% 10%, rgba(0,100,70,0.12) 0%, transparent 65%),
+    radial-gradient(ellipse 40% 60% at 30% 80%, rgba(70,40,150,0.12) 0%, transparent 65%),
+    #111113;
+}
+
+/* ─── Sidebar dark mode text ────────────────────────────────────── */
+/* "Prenestina Motors" sotto il logo */
+.pm-dark .glass-sidebar > div:first-child span {
+  color: #f0f0f5 !important;
+}
+/* "v2.0 • anno" versione in basso */
+.pm-dark .glass-sidebar > div:last-child span {
+  color: #f0f0f5 !important;
+}
+/* Pulsante Esci — testo bianco di default, rosso acceso su hover */
+.pm-dark .glass-sidebar > div:last-child button {
+  color: #e8e8ed !important;
+}
+.pm-dark .glass-sidebar > div:last-child button:hover {
+  color: #ff453a !important;
+  background-color: rgba(255,69,58,0.20) !important;
+}
+
+/* ─── Sidebar nav glass buttons ─────────────────────────────────── */
+.glass-nav-btn {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.18s cubic-bezier(0.34,1.56,0.64,1);
+  border: 1px solid transparent;
+}
+.glass-nav-btn:hover {
+  backdrop-filter: blur(14px) saturate(180%);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+  background: linear-gradient(135deg,
+    rgba(255,255,255,0.55) 0%,
+    rgba(255,210,210,0.40) 50%,
+    rgba(255,255,255,0.50) 100%
+  );
+  border-color: rgba(255,255,255,0.70);
+  box-shadow:
+    0 2px 10px rgba(180,0,0,0.10),
+    inset 0 1px 0 rgba(255,255,255,0.90),
+    inset 0 -1px 0 rgba(0,0,0,0.04);
+  color: #9b1c1c;
+}
+.glass-nav-btn-active {
+  backdrop-filter: blur(20px) saturate(200%);
+  -webkit-backdrop-filter: blur(20px) saturate(200%);
+  background: linear-gradient(135deg,
+    rgba(255,255,255,0.75) 0%,
+    rgba(255,220,218,0.58) 50%,
+    rgba(255,255,255,0.68) 100%
+  );
+  border-color: rgba(255,255,255,0.85);
+  box-shadow:
+    0 3px 14px rgba(180,0,0,0.14),
+    0 1px 3px rgba(0,0,0,0.06),
+    inset 0 1px 0 rgba(255,255,255,1),
+    inset 0 -1px 0 rgba(0,0,0,0.05);
+  color: #9b1c1c;
+}
+/* specular band sull'attivo */
+.glass-nav-btn-active::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:45%;
+  background: linear-gradient(180deg,rgba(255,255,255,0.45) 0%,rgba(255,255,255,0) 100%);
+  pointer-events:none;
+}
+
+.pm-dark .glass-nav-btn:hover {
+  background: linear-gradient(135deg,
+    rgba(80,25,25,0.70) 0%,
+    rgba(60,18,18,0.55) 50%,
+    rgba(75,22,22,0.65) 100%
+  );
+  border-color: rgba(220,38,38,0.22);
+  box-shadow:
+    0 2px 10px rgba(220,38,38,0.20),
+    inset 0 1px 0 rgba(255,255,255,0.10),
+    inset 0 -1px 0 rgba(0,0,0,0.25);
+  color: #dc2626;
+}
+.pm-dark .glass-nav-btn-active {
+  background: linear-gradient(135deg,
+    rgba(80,25,25,0.70) 0%,
+    rgba(60,18,18,0.55) 50%,
+    rgba(75,22,22,0.65) 100%
+  );
+  border-color: rgba(220,38,38,0.22);
+  box-shadow:
+    0 3px 14px rgba(220,38,38,0.22),
+    inset 0 1px 0 rgba(255,255,255,0.12),
+    inset 0 -1px 0 rgba(0,0,0,0.28);
+  color: #dc2626;
+}
+
+/* ─── Sidebar liquid glass ─────────────────────────────────────── */
+.glass-sidebar {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0 20px 20px 0;
+  backdrop-filter: blur(48px) saturate(220%) brightness(1.08);
+  -webkit-backdrop-filter: blur(48px) saturate(220%) brightness(1.08);
+  background: linear-gradient(
+    160deg,
+    rgba(255,255,255,0.62) 0%,
+    rgba(240,244,255,0.48) 50%,
+    rgba(255,255,255,0.55) 100%
+  );
+  border-right: 1px solid rgba(255,255,255,0.80);
+  box-shadow:
+    inset 1px 0 0 rgba(255,255,255,0.90),
+    inset -1px 0 0 rgba(0,0,0,0.04),
+    4px 0 40px rgba(0,0,0,0.08);
+}
+/* specular top highlight */
+.glass-sidebar::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:40%;
+  background: linear-gradient(180deg,rgba(255,255,255,0.45) 0%,rgba(255,255,255,0) 100%);
+  pointer-events:none; z-index:0;
+}
+/* iridescent edge shimmer — rimossa */
+.glass-sidebar::after { content: none; }
+.glass-sidebar > * { position:relative; z-index:1; }
+
+.pm-dark .glass-sidebar {
+  background: #1e1e1e;
+  border-right: 1px solid rgba(255,255,255,0.10);
+  box-shadow:
+    inset 1px 0 0 rgba(255,255,255,0.10),
+    inset -1px 0 0 rgba(0,0,0,0.30),
+    4px 0 40px rgba(0,0,0,0.45);
+}
+.pm-dark .glass-sidebar::before {
+  background: linear-gradient(180deg,rgba(255,255,255,0.10) 0%,rgba(255,255,255,0) 100%);
+}
+.pm-dark .glass-sidebar::after { content: none; }
+
+/* ─── Glass pill – theme switcher ─────────────────────────────── */
+.glass-pill {
+  display:inline-flex; align-items:center; gap:3px; padding:4px;
+  width:fit-content; flex-shrink:0;
+  border-radius:999px; overflow:hidden;
+  backdrop-filter: blur(24px) saturate(200%) brightness(1.05);
+  -webkit-backdrop-filter: blur(24px) saturate(200%) brightness(1.05);
+  background: linear-gradient(
+    135deg,
+    rgba(255,255,255,0.68) 0%,
+    rgba(235,240,255,0.50) 50%,
+    rgba(255,255,255,0.60) 100%
+  );
+  border: 1px solid rgba(255,255,255,0.75);
+  box-shadow:
+    0 6px 24px rgba(0,0,0,0.10),
+    0 1px 4px rgba(0,0,0,0.06),
+    inset 0 1px 0 rgba(255,255,255,0.95),
+    inset 0 -1px 0 rgba(0,0,0,0.06),
+    inset 1px 0 0 rgba(255,255,255,0.80);
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+.glass-pill:hover {
+  box-shadow:
+    0 8px 32px rgba(0,0,0,0.13),
+    0 2px 6px rgba(0,0,0,0.08),
+    inset 0 1px 0 rgba(255,255,255,0.95),
+    inset 0 -1px 0 rgba(0,0,0,0.06);
+}
+/* iridescent shimmer band on pill */
+.glass-pill::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:50%;
+  background: linear-gradient(180deg,rgba(255,255,255,0.55) 0%,rgba(255,255,255,0) 100%);
+  border-radius:999px 999px 0 0;
+  pointer-events:none;
+}
+
+.pm-dark .glass-pill {
+  background: linear-gradient(
+    135deg,
+    rgba(70,72,90,0.70) 0%,
+    rgba(50,52,70,0.58) 50%,
+    rgba(65,68,85,0.65) 100%
+  );
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow:
+    0 6px 24px rgba(0,0,0,0.45),
+    inset 0 1px 0 rgba(255,255,255,0.14),
+    inset 0 -1px 0 rgba(0,0,0,0.35);
+}
+.pm-dark .glass-pill::before {
+  background: linear-gradient(180deg,rgba(255,255,255,0.12) 0%,rgba(255,255,255,0) 100%);
+}
+
+/* Glass buttons inside pill */
+.glass-btn {
+  display:flex; align-items:center; justify-content:center;
+  width:30px; height:30px; flex-shrink:0; border-radius:999px; border:none;
+  background:transparent; cursor:pointer; position:relative; z-index:1;
+  color:#86868b; transition:all 0.18s cubic-bezier(0.34,1.56,0.64,1);
+}
+.glass-btn:hover { color:#1d1d1f; transform:scale(1.12); }
+.pm-dark .glass-btn { color:#8e8ea0; }
+.pm-dark .glass-btn:hover { color:#f5f5f7; transform:scale(1.12); }
+
+.glass-btn.glass-active {
+  background: linear-gradient(145deg,
+    rgba(255,255,255,1.0) 0%,
+    rgba(240,244,255,0.85) 100%
+  );
+  border: 1px solid rgba(255,255,255,0.85);
+  box-shadow:
+    0 3px 12px rgba(0,0,0,0.14),
+    0 1px 3px rgba(0,0,0,0.08),
+    inset 0 1px 0 rgba(255,255,255,1),
+    inset 0 -1px 0 rgba(0,0,0,0.08);
+  color:#1d1d1f;
+  transform:scale(1);
+}
+.pm-dark .glass-btn.glass-active {
+  background: linear-gradient(145deg,
+    rgba(100,104,130,0.95) 0%,
+    rgba(72,75,95,0.88) 100%
+  );
+  border: 1px solid rgba(255,255,255,0.18);
+  box-shadow:
+    0 3px 12px rgba(0,0,0,0.45),
+    inset 0 1px 0 rgba(255,255,255,0.20),
+    inset 0 -1px 0 rgba(0,0,0,0.35);
+  color:#f5f5f7;
+}
+
+/* ── Dark Mode ───────────────────────────────────────────────────── */
+.pm-dark { color-scheme: dark; color: #f5f5f7; }
+
+/* Testo generico non classificato (td, p, span senza text-*) */
+.pm-dark td,
+.pm-dark th,
+.pm-dark p:not([class*="text-"]),
+.pm-dark span:not([class*="text-"]),
+.pm-dark label { color: #f5f5f7; }
+
+/* Testo non classificato nei form */
+.pm-dark .modal-body,
+.pm-dark .space-y-4 { color: #f5f5f7; }
+
+/* Sfondi card / sidebar / modal */
+.pm-dark .bg-white { background-color: #1e1e1e !important; }
+.pm-dark .rounded-3xl.shadow-\[0_4px_32px_rgba\(0\,0\,0\,0\.10\)\] { background-color: #1e1e1e !important; }
+
+/* Superfici (input, thead, badge neutro) */
+.pm-dark .bg-\[\#f5f5f7\] { background-color: #2c2c2e !important; }
+.pm-dark .bg-gray-50    { background-color: #2c2c2e !important; }
+.pm-dark .bg-gray-100   { background-color: #2c2c2e !important; }
+
+/* Hover righe tabella */
+.pm-dark .hover\:bg-\[\#f5f5f7\]\/60:hover { background-color: rgba(44,44,46,0.7) !important; }
+.pm-dark .hover\:bg-\[\#f5f5f7\]:hover     { background-color: #2c2c2e !important; }
+.pm-dark .hover\:bg-\[\#e8e8ed\]:hover     { background-color: #3a3a3c !important; }
+
+/* Testo principale */
+.pm-dark .text-\[\#1d1d1f\] { color: #f5f5f7 !important; }
+.pm-dark .text-\[\#3a3a3c\] { color: #d1d1d6 !important; }
+.pm-dark .text-\[\#86868b\] { color: #98989f !important; }
+
+/* Titoli h1 delle sezioni — bianchi sul background scuro */
+.pm-dark h1.text-3xl { color: #f5f5f7 !important; }
+.pm-dark h1.text-3xl + p,
+.pm-dark h1.text-3xl ~ p { color: #a1a1aa !important; }
+
+/* Bordi */
+.pm-dark .border-\[\#e8e8ed\],
+.pm-dark .border-\[\#f0f0f0\],
+.pm-dark .border-\[\#f5f5f7\] { border-color: #3a3a3c !important; }
+.pm-dark .border-b,
+.pm-dark .border-t            { border-color: #3a3a3c; }
+.pm-dark .divide-y > *        { border-color: #3a3a3c !important; }
+.pm-dark .last\:border-0:last-child { border-color: transparent !important; }
+
+/* Ombre */
+.pm-dark .shadow-\[0_2px_16px_rgba\(0\,0\,0\,0\.07\)\]  { box-shadow: 0 2px 12px rgba(0,0,0,0.55) !important; }
+.pm-dark .shadow-\[0_4px_24px_rgba\(0\,0\,0\,0\.11\)\]  { box-shadow: 0 4px 20px rgba(0,0,0,0.55) !important; }
+.pm-dark .shadow-\[0_24px_64px_rgba\(0\,0\,0\,0\.18\)\] { box-shadow: 0 24px 64px rgba(0,0,0,0.7) !important; }
+
+/* Input / select / textarea testo */
+.pm-dark input:not([type="checkbox"]),
+.pm-dark select,
+.pm-dark textarea { color: #f5f5f7 !important; }
+
+/* Banner info / avviso */
+.pm-dark .bg-\[\#0071e3\]\/6  { background-color: rgba(0,113,227,0.18) !important; }
+.pm-dark .bg-\[\#ff9500\]\/8  { background-color: rgba(255,149,0,0.18) !important; }
+.pm-dark .bg-\[\#ff9500\]\/15 { background-color: rgba(255,149,0,0.22) !important; }
+.pm-dark .bg-\[\#ff3b30\]\/10 { background-color: rgba(255,59,48,0.22) !important; }
+.pm-dark .bg-\[\#34c759\]\/15 { background-color: rgba(52,199,89,0.22) !important; }
+.pm-dark .bg-\[\#0071e3\]\/10 { background-color: rgba(0,113,227,0.22) !important; }
+.pm-dark .bg-\[\#af52de\]\/10 { background-color: rgba(175,82,222,0.22) !important; }
+
+/* Notifica toast */
+.pm-dark .fixed.top-5.right-5.z-\[100\] { background-color: #2c2c2e !important; border-color: #3a3a3c !important; }
+
+/* Login card dark */
+.pm-dark .text-\[\#cc2900\] { color: #ff6b6b !important; }
+
+/* Thead tabelle */
+.pm-dark thead tr { background-color: #2c2c2e !important; }
+
+/* Colori Tailwind standard nelle tabelle — versioni più chiare per dark */
+.pm-dark .text-blue-600   { color: #60a5fa !important; }
+.pm-dark .text-amber-600  { color: #fbbf24 !important; }
+.pm-dark .text-green-600  { color: #4ade80 !important; }
+.pm-dark .text-red-600    { color: #f87171 !important; }
+.pm-dark .text-gray-700,
+.pm-dark .text-gray-800,
+.pm-dark .text-gray-900   { color: #d1d1d6 !important; }
+
+/* F24 Preview (usa text-gray-800 e border-gray-700) */
+.pm-dark .border-gray-700 { border-color: #4a4a4c !important; }
+.pm-dark .bg-blue-800     { background-color: #1d3a6e !important; }
+
+/* Transizione fluida al toggle */
+.pm-dark .bg-white,
+.pm-dark .bg-\[\#f5f5f7\],
+.pm-dark .border-\[\#e8e8ed\],
+.pm-dark .border-\[\#f0f0f0\],
+.pm-dark .border-b,
+.pm-dark .border-t,
+.pm-dark .text-\[\#1d1d1f\],
+.pm-dark .text-\[\#3a3a3c\],
+.pm-dark .text-\[\#86868b\] {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease;
+}
