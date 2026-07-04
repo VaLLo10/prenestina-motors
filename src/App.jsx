@@ -5,7 +5,7 @@ import {
   CreditCard, Settings, Plus, Edit2, Trash2, Eye, X, Check,
   AlertTriangle, Building2, Euro, ChevronRight, Search, Printer,
   BarChart2, Clock, CheckCircle, XCircle, AlertCircle,
-  ArrowUpRight, ArrowDownRight, Banknote, Info, Moon, Sun
+  ArrowUpRight, ArrowDownRight, Banknote, Info, Moon, Sun, Menu
 } from "lucide-react";
 import {
   BarChart, Bar, PieChart as RPieChart, Pie, Cell,
@@ -16,7 +16,7 @@ const SK = {
   settings:'cd:settings', cars:'cd:cars', sales:'cd:sales',
   expenses:'cd:expenses', f24:'cd:f24', mandati:'cd:mandati', auth:'cd:auth'
 };
-const DEFAULT_AUTH = { username:'admin', password:'Prenestina2026' };
+const DEFAULT_AUTH = { username:'admin', password:'Skylinevalerio2026@' };
 const MESI = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
 const MESI_FULL = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
 const TRIBUTI_IVA_TRIM = [
@@ -101,7 +101,7 @@ const BADGE = {
 };
 const Badge = ({c='gray',children}) => <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${BADGE[c]||BADGE.gray}`}>{children}</span>;
 const Card = ({children,cls=''}) => <div className={`bg-white rounded-2xl shadow-[0_2px_16px_rgba(0,0,0,0.07)] transition-shadow duration-200 hover:shadow-[0_4px_24px_rgba(0,0,0,0.11)] ${cls}`}>{children}</div>;
-const KPI_IC={blue:'text-[#0071e3]',green:'text-[#34c759]',amber:'text-[#ff9500]',red:'text-[#ff3b30]',purple:'text-[#af52de]'};
+const KPI_IC={blue:'text-[#0071e3]',green:'text-[#34c759]',amber:'text-[#ff9500]',red:'text-[#ff3b30]',purple:'text-[#af52de]',celeste:'text-[#5ac8fa]'};
 const KPI = ({icon:Ic,label,value,sub,color='blue',trend}) => {
   return (
     <div className="bg-white rounded-2xl shadow-[0_2px_16px_rgba(0,0,0,0.07)] p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_6px_28px_rgba(0,0,0,0.12)] cursor-default">
@@ -200,12 +200,12 @@ const LoginScreen = ({onLogin,dark,toggleDark}) => {
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
           <div className="w-40 h-16 mb-3 overflow-hidden rounded-2xl bg-white shadow-sm flex items-center justify-center">
-            <img src="/logo.png" alt="Prenestina Motors" className="w-full h-full object-cover object-center"
+            <img src="/logo.png" alt="Skyline Motors" className="w-full h-full object-cover object-center"
               onError={e=>{e.target.style.display='none';e.target.nextSibling.style.display='flex';}}
             />
             <div className="w-full h-full hidden items-center justify-center"><Car size={28} className="text-[#86868b]"/></div>
           </div>
-          <h1 className="text-xl font-semibold tracking-tight" style={{color:dark?'#f5f5f7':'#1d1d1f'}}>Prenestina Motors</h1>
+          <h1 className="text-xl font-semibold tracking-tight" style={{color:dark?'#f5f5f7':'#1d1d1f'}}>Skyline Motors</h1>
           <p className="text-sm text-[#86868b] mt-0.5" style={{fontFamily:'Georgia,serif',fontStyle:'italic'}}>Gestionale interno</p>
         </div>
         {/* Card */}
@@ -244,12 +244,14 @@ const LoginScreen = ({onLogin,dark,toggleDark}) => {
   );
 };
 
-const Sidebar = ({active,onNav,s,onLogout}) => (
-  <div className="w-56 glass-sidebar flex flex-col h-full flex-shrink-0">
+const Sidebar = ({active,onNav,s,onLogout,open,onClose}) => (
+  <>
+    <div className={`fixed inset-0 bg-black/50 z-40 lg:hidden transition-opacity duration-300 ${open?'opacity-100':'opacity-0 pointer-events-none'}`} onClick={onClose}/>
+    <div className={`w-56 glass-sidebar flex flex-col flex-shrink-0 fixed inset-y-0 left-0 z-50 transition-transform duration-300 ease-in-out lg:relative lg:inset-auto lg:z-auto lg:translate-x-0 lg:h-full ${open?'translate-x-0':'-translate-x-full'}`}>
     <div className="px-5 pt-5 pb-4 border-b border-[#f0f0f0] flex flex-col items-center gap-2">
       <button onClick={()=>onNav('dashboard')} className="w-full focus:outline-none group">
         <div className="w-full h-14 overflow-hidden rounded-2xl bg-[#f5f5f7] transition-all duration-200 group-hover:shadow-md group-hover:scale-[1.02] group-active:scale-[0.97]">
-          <img src="/logo.png" alt="Prenestina Motors" className="w-full h-full object-cover object-center"
+          <img src="/logo.png" alt="Skyline Motors" className="w-full h-full object-cover object-center"
             onError={e=>{e.target.style.display='none';e.target.nextSibling.style.display='flex';}}
           />
           <div className="w-full h-full hidden items-center justify-center">
@@ -258,12 +260,12 @@ const Sidebar = ({active,onNav,s,onLogout}) => (
         </div>
       </button>
       <div className="text-center">
-        <span className="text-[12.5px] text-[#86868b]" style={{fontFamily:'Georgia,"Times New Roman",serif',fontStyle:'italic',letterSpacing:'0.02em'}}>Prenestina Motors</span>
+        <span className="text-[12.5px] text-[#86868b]" style={{fontFamily:'Georgia,"Times New Roman",serif',fontStyle:'italic',letterSpacing:'0.02em'}}>Skyline Motors</span>
       </div>
     </div>
     <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
       {NAV.map(({id,label,icon:Ic})=>(
-        <button key={id} onClick={()=>onNav(id)} className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium active:scale-[0.98] glass-nav-btn ${active===id?'glass-nav-btn-active':'text-[#1d1d1f]'}`}>
+        <button key={id} onClick={()=>onNav(id)} className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium active:scale-[0.98] glass-nav-btn ${active===id?'glass-nav-btn-active':'text-[#1d1d1f] hover:translate-x-0.5'}`}>
           <Ic size={14} className="flex-shrink-0"/>{label}
         </button>))}
     </nav>
@@ -274,6 +276,7 @@ const Sidebar = ({active,onNav,s,onLogout}) => (
       </button>
     </div>
   </div>
+  </>
 );
 const Dashboard = ({cars,sales,expenses,f24,onNav}) => {
   const yr=new Date().getFullYear(),mo=new Date().getMonth();
@@ -302,14 +305,14 @@ const Dashboard = ({cars,sales,expenses,f24,onNav}) => {
   },[sales,expenses,f24,cars,yr,mo]);
   return (
     <div className="space-y-5 animate-fadeUp">
-      <div><h1 className="text-3xl font-semibold text-[#1d1d1f] tracking-tight">Dashboard</h1><p className="text-[#86868b] text-sm mt-1">{MESI_FULL[mo]} {yr}</p></div>
-      <div className="grid grid-cols-4 gap-4 stagger-children">
-        <KPI icon={Euro} label="Fatturato del mese" value={fmt(fat)} color="red"/>
+      <div><h1 className="text-xl md:text-3xl font-semibold text-[#1d1d1f] tracking-tight">Dashboard</h1><p className="text-[#86868b] text-sm mt-1">{MESI_FULL[mo]} {yr}</p></div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 stagger-children">
+        <KPI icon={Euro} label="Fatturato del mese" value={fmt(fat)} color="celeste"/>
         <KPI icon={TrendingUp} label="Margine Netto" value={fmt(mn)} color="green"/>
         <KPI icon={ShoppingBag} label="Spese operative" value={fmt(sp)} color="amber"/>
         <KPI icon={BarChart2} label="Utile operativo" value={fmt(mn-sp)} color={mn-sp>=0?'blue':'red'}/>
       </div>
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KPI icon={Car} label="Auto disponibili" value={disp} color="purple" sub={`${cars.length} totali in parco`}/>
         <KPI icon={TrendingUp} label="Vendite mese" value={smLen} color="green" sub="Veicoli venduti"/>
         <KPI icon={Receipt} label="IVA da versare" value={fmt(iva)} color="amber" sub={`Anno ${yr} — pagata: ${fmt(ivaGiaPagata)}`}/>
@@ -321,8 +324,8 @@ const Dashboard = ({cars,sales,expenses,f24,onNav}) => {
           <p className="text-xs text-[#7a4700]/70 mt-1">{scad.map(f=>`${f.codice_tributo} — ${fmtD(f.scadenza)} — ${fmt(f.importo)}`).join(' • ')}</p></div>
         <Btn variant="ghost" size="sm" onClick={()=>onNav('f24')}>Gestisci <ChevronRight size={11}/></Btn>
       </div>}
-      <div className="grid grid-cols-3 gap-4">
-        <Card cls="p-5 col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <Card cls="p-5 lg:col-span-2">
           <h3 className="text-sm font-semibold text-[#1d1d1f] mb-4">Andamento Ultimi 6 Mesi</h3>
           <ResponsiveContainer width="100%" height={210}>
             <BarChart data={chart}>
@@ -420,7 +423,7 @@ const ParcoAuto=({cars,onAdd,onEdit,onDel})=>{
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between animate-fadeUp">
-        <div><h1 className="text-3xl font-semibold text-[#1d1d1f] tracking-tight">Parco Auto</h1><p className="text-sm text-[#86868b] mt-1">{cars.filter(c=>c.stato==='disponibile').length} disponibili • {cars.length} totali</p></div>
+        <div><h1 className="text-xl md:text-3xl font-semibold text-[#1d1d1f] tracking-tight">Parco Auto</h1><p className="text-sm text-[#86868b] mt-1">{cars.filter(c=>c.stato==='disponibile').length} disponibili • {cars.length} totali</p></div>
         <Btn onClick={openAdd}><Plus size={13}/>Aggiungi Veicolo</Btn>
       </div>
       <Card>
@@ -486,11 +489,11 @@ const Vendite=({sales,cars,onAdd,onEdit,onDel})=>{
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div><h1 className="text-3xl font-semibold text-[#1d1d1f] tracking-tight">Vendite</h1><p className="text-sm text-[#86868b] mt-1">{sales.length} vendite registrate</p></div>
+        <div><h1 className="text-xl md:text-3xl font-semibold text-[#1d1d1f] tracking-tight">Vendite</h1><p className="text-sm text-[#86868b] mt-1">{sales.length} vendite registrate</p></div>
         <Btn onClick={openAdd}><Plus size={13}/>Registra Vendita</Btn>
       </div>
-      <div className="grid grid-cols-4 gap-4">
-        <KPI icon={Euro} label="Fatturato" value={fmt(totFat)} color="red"/>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <KPI icon={Euro} label="Fatturato" value={fmt(totFat)} color="celeste"/>
         <KPI icon={TrendingUp} label="Margine Lordo" value={fmt(filt.reduce((a,v)=>a+Math.max(0,v.prezzo_vendita-v.prezzo_acquisto),0))} color="green"/>
         <KPI icon={Receipt} label="IVA Regime Margine" value={fmt(totIva)} color="amber"/>
         <KPI icon={BarChart2} label="Margine Netto" value={fmt(totMN)} color="purple"/>
@@ -556,9 +559,9 @@ const Spese=({expenses,onAdd,onEdit,onDel})=>{
   const f=(k,v)=>setForm(p=>({...p,[k]:v}));
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between"><h1 className="text-3xl font-semibold text-[#1d1d1f] tracking-tight">Spese Operative</h1><Btn onClick={openAdd}><Plus size={13}/>Aggiungi Spesa</Btn></div>
-      <div className="grid grid-cols-3 gap-4">
-        <KPI icon={Euro} label="Totale Spese" value={fmt(tot)} color="red"/>
+      <div className="flex items-center justify-between"><h1 className="text-xl md:text-3xl font-semibold text-[#1d1d1f] tracking-tight">Spese Operative</h1><Btn onClick={openAdd}><Plus size={13}/>Aggiungi Spesa</Btn></div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <KPI icon={Euro} label="Totale Spese" value={fmt(tot)} color="celeste"/>
         <KPI icon={ShoppingBag} label="Voci di spesa" value={filt.length} color="amber"/>
         <KPI icon={BarChart2} label="Media per voce" value={fmt(filt.length?tot/filt.length:0)} color="blue"/>
       </div>
@@ -635,15 +638,15 @@ const GestioneIVA=({sales,settings,f24})=>{
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div><h1 className="text-3xl font-semibold text-[#1d1d1f] tracking-tight">Gestione IVA</h1><p className="text-sm text-[#86868b] mt-1">Regime del Margine — art. 36 D.L. 41/1995</p></div>
+        <div><h1 className="text-xl md:text-3xl font-semibold text-[#1d1d1f] tracking-tight">Gestione IVA</h1><p className="text-sm text-[#86868b] mt-1">Regime del Margine — art. 36 D.L. 41/1995</p></div>
         <Sel value={anno} onChange={e=>setAnno(+e.target.value)}>{[2024,2025,2026].map(y=><option key={y}>{y}</option>)}</Sel>
       </div>
       <div className="bg-[#0071e3]/6 border border-[#0071e3]/15 rounded-2xl p-4 flex items-start gap-3">
         <Info size={15} className="text-[#0071e3] mt-0.5 flex-shrink-0"/>
         <p className="text-sm text-[#1d1d1f]">Nel <strong>Regime del Margine</strong> l'IVA si calcola sul margine: <code className="bg-[#0071e3]/10 px-1.5 py-0.5 rounded-md text-[#0071e3] text-xs">IVA = (P.Vendita − P.Acquisto) × 22 ÷ 122</code>. Liquidazione: {settings.liquidazioneIva}.</p>
       </div>
-      <div className="grid grid-cols-5 gap-4">
-        <KPI icon={Euro} label="Fatturato Anno" value={fmt(totF)} color="red"/>
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <KPI icon={Euro} label="Fatturato Anno" value={fmt(totF)} color="celeste"/>
         <KPI icon={TrendingUp} label="Margine Lordo" value={fmt(totML)} color="green"/>
         <KPI icon={Receipt} label="IVA Maturata" value={fmt(totIva)} color="amber" sub="Totale anno"/>
         <KPI icon={CheckCircle} label="IVA Già Pagata" value={fmt(totIvaPagata)} color="green" sub="Via F24"/>
@@ -724,11 +727,11 @@ const F24Manager=({f24Records,onAdd,onEdit,onDel,settings})=>{
   const dap=f24Records.filter(r=>r.stato==='da_pagare'),pag=f24Records.filter(r=>r.stato==='pagato'),oggi=new Date();
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between"><div><h1 className="text-3xl font-semibold text-[#1d1d1f] tracking-tight">F24 & Tasse</h1><p className="text-sm text-[#86868b] mt-1">Gestione pagamenti tributari</p></div><Btn onClick={openAdd}><Plus size={13}/>Nuovo F24</Btn></div>
-      <div className="grid grid-cols-3 gap-4">
+      <div className="flex items-center justify-between"><div><h1 className="text-xl md:text-3xl font-semibold text-[#1d1d1f] tracking-tight">F24 & Tasse</h1><p className="text-sm text-[#86868b] mt-1">Gestione pagamenti tributari</p></div><Btn onClick={openAdd}><Plus size={13}/>Nuovo F24</Btn></div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <KPI icon={AlertCircle} label="Da Pagare" value={fmt(dap.reduce((a,r)=>a+r.importo,0))} color="red" sub={`${dap.length} scadenze`}/>
         <KPI icon={CheckCircle} label="Già Pagato" value={fmt(pag.reduce((a,r)=>a+r.importo,0))} color="green" sub={`${pag.length} pagamenti`}/>
-        <KPI icon={FileText} label="Totale Anno" value={fmt(f24Records.reduce((a,r)=>a+r.importo,0))} color="red"/>
+        <KPI icon={FileText} label="Totale Anno" value={fmt(f24Records.reduce((a,r)=>a+r.importo,0))} color="celeste"/>
       </div>
       {dap.length>0&&<Card>
         <div className="px-5 py-3 border-b flex items-center gap-2"><AlertCircle size={14} className="text-red-500"/><h3 className="text-sm font-semibold text-red-700">Da Pagare</h3></div>
@@ -795,9 +798,9 @@ const MandatiPagamento=({mandati,onAdd,onEdit,onDel,settings})=>{
   const f=(k,v)=>setForm(p=>({...p,[k]:v}));
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between"><div><h1 className="text-3xl font-semibold text-[#1d1d1f] tracking-tight">Mandati di Pagamento</h1><p className="text-sm text-[#86868b] mt-1">{mandati.length} mandati totali</p></div><Btn onClick={openAdd}><Plus size={13}/>Nuovo Mandato</Btn></div>
-      <div className="grid grid-cols-3 gap-4">
-        <KPI icon={Euro} label="Totale Mandati" value={fmt(mandati.filter(m=>m.stato!=='annullato').reduce((a,m)=>a+m.importo,0))} color="red"/>
+      <div className="flex items-center justify-between"><div><h1 className="text-xl md:text-3xl font-semibold text-[#1d1d1f] tracking-tight">Mandati di Pagamento</h1><p className="text-sm text-[#86868b] mt-1">{mandati.length} mandati totali</p></div><Btn onClick={openAdd}><Plus size={13}/>Nuovo Mandato</Btn></div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <KPI icon={Euro} label="Totale Mandati" value={fmt(mandati.filter(m=>m.stato!=='annullato').reduce((a,m)=>a+m.importo,0))} color="celeste"/>
         <KPI icon={Clock} label="Da Eseguire" value={mandati.filter(m=>m.stato==='in_attesa'||m.stato==='approvato').length} color="amber"/>
         <KPI icon={CheckCircle} label="Eseguiti" value={mandati.filter(m=>m.stato==='eseguito').length} color="green"/>
       </div>
@@ -876,10 +879,10 @@ const Bilancio=({sales,expenses,f24Records})=>{
   const tot=md.reduce((a,m)=>({fat:a.fat+m.fat,mn:a.mn+m.mn,sp:a.sp+m.sp,im:a.im+m.im,utile:a.utile+m.utile,nv:a.nv+m.nv}),{fat:0,mn:0,sp:0,im:0,utile:0,nv:0});
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between"><h1 className="text-3xl font-semibold text-[#1d1d1f] tracking-tight">Bilancio</h1>
+      <div className="flex items-center justify-between"><h1 className="text-xl md:text-3xl font-semibold text-[#1d1d1f] tracking-tight">Bilancio</h1>
         <Sel value={anno} onChange={e=>setAnno(+e.target.value)}>{[2024,2025,2026].map(y=><option key={y}>{y}</option>)}</Sel></div>
-      <div className="grid grid-cols-5 gap-3">
-        <KPI icon={Euro} label="Fatturato" value={fmt(tot.fat)} color="red" sub={`${tot.nv} vendite`}/>
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+        <KPI icon={Euro} label="Fatturato" value={fmt(tot.fat)} color="celeste" sub={`${tot.nv} vendite`}/>
         <KPI icon={TrendingUp} label="Margine Netto" value={fmt(tot.mn)} color="green"/>
         <KPI icon={ShoppingBag} label="Spese Operative" value={fmt(tot.sp)} color="amber"/>
         <KPI icon={Receipt} label="Imposte Pagate" value={fmt(tot.im)} color="purple"/>
@@ -946,7 +949,7 @@ const Impostazioni=({settings,onSave})=>{
   useEffect(()=>setForm(settings),[settings]);
   return (
     <div className="space-y-5 max-w-3xl">
-      <h1 className="text-3xl font-semibold text-[#1d1d1f] tracking-tight">Impostazioni Azienda</h1>
+      <h1 className="text-xl md:text-3xl font-semibold text-[#1d1d1f] tracking-tight">Impostazioni Azienda</h1>
       <Card cls="p-6">
         <h2 className="text-sm font-semibold text-[#1d1d1f] mb-4 flex items-center gap-2"><Building2 size={14} className="text-[#86868b]"/>Dati Anagrafici</h2>
         <div className="grid grid-cols-2 gap-4">
@@ -1021,6 +1024,7 @@ export default function App() {
   const [dark,setDark]=useState(()=>localStorage.getItem('cd:dark')==='1');
   const toggleDark=useCallback(()=>setDark(d=>{const n=!d;localStorage.setItem('cd:dark',n?'1':'0');return n;}),[]);
   const [authed,setAuthed]=useState(()=>sessionStorage.getItem('cd:session')==='1');
+  const [sidebarOpen,setSidebarOpen]=useState(false);
   const logout=()=>{sessionStorage.removeItem('cd:session');setAuthed(false);};
   const [sec,setSec]=useState('dashboard'),[settings,setSettings]=useState(DEFAULT_SETTINGS),
     [cars,setCars]=useState([]),[sales,setSales]=useState([]),
@@ -1185,8 +1189,12 @@ export default function App() {
   return (
     <div className={`flex h-screen overflow-hidden pm-glass-bg${dark?' pm-dark':''}`} style={{fontFamily:'-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",system-ui,sans-serif'}}>
       {notif&&<Notif msg={notif.msg} type={notif.type} onClose={()=>setNotif(null)}/>}
-      <Sidebar active={sec} onNav={setSec} s={settings} onLogout={logout}/>
+      <Sidebar active={sec} onNav={v=>{setSec(v);setSidebarOpen(false);}} s={settings} onLogout={logout} open={sidebarOpen} onClose={()=>setSidebarOpen(false)}/>
       <div className="flex-1 overflow-y-auto relative">
+        {/* Hamburger mobile */}
+        <button onClick={()=>setSidebarOpen(true)} className="lg:hidden absolute top-4 left-4 z-30 p-2 rounded-xl glass-pill" style={{padding:'7px'}}>
+          <Menu size={18}/>
+        </button>
         {/* Toggle dark / light */}
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 glass-pill">
           <button className={`glass-btn${!dark?' glass-active':''}`} onClick={()=>dark&&toggleDark()} title="Modalità chiara" style={{width:30,height:30,flexShrink:0}}>
@@ -1196,7 +1204,7 @@ export default function App() {
             <Moon size={14}/>
           </button>
         </div>
-        <div className="p-7">
+        <div className="p-4 md:p-7 pt-16 md:pt-7">
         {sec==='dashboard'&&<Dashboard cars={cars} sales={sales} expenses={expenses} f24={f24} mandati={mandati} onNav={setSec}/>}
         {sec==='parco'&&<ParcoAuto cars={cars} onAdd={cOps.add} onEdit={cOps.edit} onDel={cOps.del}/>}
         {sec==='vendite'&&<Vendite sales={sales} cars={cars} onAdd={sOps.add} onEdit={sOps.edit} onDel={sOps.del}/>}

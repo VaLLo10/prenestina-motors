@@ -93,31 +93,31 @@
   -webkit-backdrop-filter: blur(14px) saturate(180%);
   background: linear-gradient(135deg,
     rgba(255,255,255,0.55) 0%,
-    rgba(255,210,210,0.40) 50%,
+    rgba(210,240,255,0.40) 50%,
     rgba(255,255,255,0.50) 100%
   );
   border-color: rgba(255,255,255,0.70);
   box-shadow:
-    0 2px 10px rgba(180,0,0,0.10),
+    0 2px 10px rgba(90,200,250,0.15),
     inset 0 1px 0 rgba(255,255,255,0.90),
     inset 0 -1px 0 rgba(0,0,0,0.04);
-  color: #9b1c1c;
+  color: #5ac8fa;
 }
 .glass-nav-btn-active {
   backdrop-filter: blur(20px) saturate(200%);
   -webkit-backdrop-filter: blur(20px) saturate(200%);
   background: linear-gradient(135deg,
     rgba(255,255,255,0.75) 0%,
-    rgba(255,220,218,0.58) 50%,
+    rgba(210,240,255,0.58) 50%,
     rgba(255,255,255,0.68) 100%
   );
   border-color: rgba(255,255,255,0.85);
   box-shadow:
-    0 3px 14px rgba(180,0,0,0.14),
+    0 3px 14px rgba(90,200,250,0.18),
     0 1px 3px rgba(0,0,0,0.06),
     inset 0 1px 0 rgba(255,255,255,1),
     inset 0 -1px 0 rgba(0,0,0,0.05);
-  color: #9b1c1c;
+  color: #5ac8fa;
 }
 /* specular band sull'attivo */
 .glass-nav-btn-active::before {
@@ -129,29 +129,29 @@
 
 .pm-dark .glass-nav-btn:hover {
   background: linear-gradient(135deg,
-    rgba(80,25,25,0.70) 0%,
-    rgba(60,18,18,0.55) 50%,
-    rgba(75,22,22,0.65) 100%
+    rgba(20,50,70,0.75) 0%,
+    rgba(15,40,60,0.60) 50%,
+    rgba(18,45,65,0.70) 100%
   );
-  border-color: rgba(220,38,38,0.22);
+  border-color: rgba(90,200,250,0.20);
   box-shadow:
-    0 2px 10px rgba(220,38,38,0.20),
+    0 2px 10px rgba(90,200,250,0.15),
     inset 0 1px 0 rgba(255,255,255,0.10),
     inset 0 -1px 0 rgba(0,0,0,0.25);
-  color: #dc2626;
+  color: #5ac8fa;
 }
 .pm-dark .glass-nav-btn-active {
   background: linear-gradient(135deg,
-    rgba(80,25,25,0.70) 0%,
-    rgba(60,18,18,0.55) 50%,
-    rgba(75,22,22,0.65) 100%
+    rgba(20,50,70,0.75) 0%,
+    rgba(15,40,60,0.60) 50%,
+    rgba(18,45,65,0.70) 100%
   );
-  border-color: rgba(220,38,38,0.22);
+  border-color: rgba(90,200,250,0.22);
   box-shadow:
-    0 3px 14px rgba(220,38,38,0.22),
+    0 3px 14px rgba(90,200,250,0.18),
     inset 0 1px 0 rgba(255,255,255,0.12),
     inset 0 -1px 0 rgba(0,0,0,0.28);
-  color: #dc2626;
+  color: #5ac8fa;
 }
 
 /* ─── Sidebar liquid glass ─────────────────────────────────────── */
@@ -324,9 +324,14 @@
 .pm-dark .text-\[\#86868b\] { color: #98989f !important; }
 
 /* Titoli h1 delle sezioni — bianchi sul background scuro */
-.pm-dark h1.text-3xl { color: #f5f5f7 !important; }
-.pm-dark h1.text-3xl + p,
-.pm-dark h1.text-3xl ~ p { color: #a1a1aa !important; }
+.pm-dark h1 { color: #f5f5f7 !important; }
+.pm-dark h1 + p,
+.pm-dark h1 ~ p { color: #a1a1aa !important; }
+
+/* ── Responsive mobile ──────────────────────────────────────── */
+@media (max-width: 1023px) {
+  .glass-sidebar { height: 100dvh; }
+}
 
 /* Bordi */
 .pm-dark .border-\[\#e8e8ed\],
