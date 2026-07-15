@@ -79,7 +79,8 @@ const DEFAULT_SETTINGS = {
   ragioneSociale:'', partitaIva:'', codiceFiscale:'', indirizzo:'',
   cap:'', citta:'', provincia:'', telefono:'', email:'', pec:'',
   regimeFiscale:'margine', liquidazioneIva:'trimestrale',
-  codiceAteco:'45.11.01', banca:'', iban:'', tipoSocieta:'srl', aliquotaImposta:24
+  codiceAteco:'45.11.01', banca:'', iban:'', tipoSocieta:'srl', aliquotaImposta:24,
+  fondoCassaIniziale:200000
 };
 const _fmtEUR = new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'});
 const _fmtNum = new Intl.NumberFormat('it-IT');
@@ -278,8 +279,10 @@ const Sidebar = ({active,onNav,s,onLogout,open,onClose}) => (
   </div>
   </>
 );
-const Dashboard = ({cars,sales,expenses,f24,onNav}) => {
+const Dashboard = ({cars,sales,expenses,f24,onNav,cassaMovimenti,settings}) => {
   const yr=new Date().getFullYear(),mo=new Date().getMonth();
+  const fondoIniziale=settings?.fondoCassaIniziale??200000;
+  const saldoCassa=fondoIniziale+(cassaMovimenti||[]).filter(m=>m.tipo==='entrata').reduce((a,m)=>a+m.importo,0)-(cassaMovimenti||[]).filter(m=>m.tipo==='uscita').reduce((a,m)=>a+m.importo,0);
   const {fat,mn,sp,iva,ivaGiaPagata,disp,scad,chart,pieD,rec,smLen}=useMemo(()=>{
     const oggi=new Date();
     const sm=sales.filter(s=>{const d=new Date(s.data_vendita);return d.getFullYear()===yr&&d.getMonth()===mo;});
@@ -306,11 +309,12 @@ const Dashboard = ({cars,sales,expenses,f24,onNav}) => {
   return (
     <div className="space-y-5 animate-fadeUp">
       <div><h1 className="text-xl md:text-3xl font-semibold text-[#1d1d1f] tracking-tight">Dashboard</h1><p className="text-[#86868b] text-sm mt-1">{MESI_FULL[mo]} {yr}</p></div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 stagger-children">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 stagger-children">
         <KPI icon={Euro} label="Fatturato del mese" value={fmt(fat)} color="celeste"/>
         <KPI icon={TrendingUp} label="Margine Netto" value={fmt(mn)} color="green"/>
         <KPI icon={ShoppingBag} label="Spese operative" value={fmt(sp)} color="amber"/>
         <KPI icon={BarChart2} label="Utile operativo" value={fmt(mn-sp)} color={mn-sp>=0?'blue':'red'}/>
+        <KPI icon={Banknote} label="Saldo Cassa" value={fmt(saldoCassa)} color={saldoCassa>=0?'celeste':'red'} sub="Fondo disponibile"/>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KPI icon={Car} label="Auto disponibili" value={disp} color="purple" sub={`${cars.length} totali in parco`}/>
@@ -372,7 +376,7 @@ const Dashboard = ({cars,sales,expenses,f24,onNav}) => {
   );
 };
 const STATI_C={disponibile:{l:'Disponibile',c:'green'},venduto:{l:'Venduto',c:'gray'},in_preparazione:{l:'In preparazione',c:'amber'}};
-const emptyC=()=>({id:'',targa:'',marca:'',modello:'',anno:new Date().getFullYear(),km:0,colore:'',carburante:'Benzina',cambio:'Manuale',prezzo_acquisto:0,data_acquisto:today(),fornitore:'',note:'',stato:'disponibile'});
+const emptyC=()=>({id:'',targa:'',marca:'',modello:'',anno:new Date().getFullYear(),km:0,colore:'',carburante:'Benzina',cambio:'Manuale',prezzo_acquisto:0,data_acquisto:today(),fornitore:'',note:'',stato:'disponibile',mandato_id:''});
 
 /* ── BrandModelPicker ─────────────────────────────────────────────── */
 const BrandModelPicker=({marca,modello,onChange})=>{
@@ -413,7 +417,7 @@ const BrandModelPicker=({marca,modello,onChange})=>{
   );
 };
 
-const ParcoAuto=({cars,onAdd,onEdit,onDel})=>{
+const ParcoAuto=({cars,onAdd,onEdit,onDel,mandati})=>{
   const [q,setQ]=useState(''),[fs,setFs]=useState('tutti'),[show,setShow]=useState(false),[form,setForm]=useState(emptyC()),[eid,setEid]=useState(null);
   const filt=cars.filter(c=>{const s=q.toLowerCase();return(!q||c.targa?.toLowerCase().includes(s)||c.marca?.toLowerCase().includes(s)||c.modello?.toLowerCase().includes(s))&&(fs==='tutti'||c.stato===fs);});
   const openAdd=()=>{setForm(emptyC());setEid(null);setShow(true);};
@@ -437,9 +441,9 @@ const ParcoAuto=({cars,onAdd,onEdit,onDel})=>{
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead><tr className="bg-[#f5f5f7] text-[#86868b] text-xs">{['Targa','Veicolo','Anno','Km','Carburante','P.Acquisto','Data Acq.','Fornitore','Stato','Azioni'].map(h=><th key={h} className="px-3 py-3 text-left font-medium">{h}</th>)}</tr></thead>
+            <thead><tr className="bg-[#f5f5f7] text-[#86868b] text-xs">{['Targa','Veicolo','Anno','Km','Carburante','P.Acquisto','Data Acq.','Fornitore','Mandato','Stato','Azioni'].map(h=><th key={h} className="px-3 py-3 text-left font-medium">{h}</th>)}</tr></thead>
             <tbody className="divide-y">
-              {filt.length===0&&<tr><td colSpan={10} className="px-4 py-10 text-center text-[#86868b]">Nessun veicolo trovato</td></tr>}
+              {filt.length===0&&<tr><td colSpan={11} className="px-4 py-10 text-center text-[#86868b]">Nessun veicolo trovato</td></tr>}
               {filt.map(c=>(
                 <tr key={c.id} className="hover:bg-[#f5f5f7]/60 transition-colors">
                   <td className="px-3 py-2.5 font-mono font-bold text-[#1d1d1f]">{c.targa}</td>
@@ -447,6 +451,7 @@ const ParcoAuto=({cars,onAdd,onEdit,onDel})=>{
                   <td className="px-3 py-2.5">{c.anno}</td><td className="px-3 py-2.5">{fmtN(c.km)} km</td>
                   <td className="px-3 py-2.5">{c.carburante}</td><td className="px-3 py-2.5 font-medium">{fmt(c.prezzo_acquisto)}</td>
                   <td className="px-3 py-2.5 text-[#86868b]">{fmtD(c.data_acquisto)}</td><td className="px-3 py-2.5 text-[#3a3a3c]">{c.fornitore||'—'}</td>
+                  <td className="px-3 py-2.5">{c.mandato_id?<span className="px-1.5 py-0.5 rounded text-xs font-bold bg-[#5ac8fa]/15 text-[#0071e3]">{(mandati||[]).find(m=>m.id===c.mandato_id)?.numero||'Collegato'}</span>:<span className="text-[#86868b] text-xs">—</span>}</td>
                   <td className="px-3 py-2.5"><Badge c={STATI_C[c.stato]?.c}>{STATI_C[c.stato]?.l}</Badge></td>
                   <td className="px-3 py-2.5"><div className="flex gap-0.5"><IcoBtn onClick={()=>openEdit(c)} icon={Edit2} color="blue"/><IcoBtn onClick={()=>onDel(c.id)} icon={Trash2} color="red"/></div></td>
                 </tr>))}
@@ -467,6 +472,15 @@ const ParcoAuto=({cars,onAdd,onEdit,onDel})=>{
           <Inp label="Prezzo Acquisto (€)" type="number" step="0.01" value={form.prezzo_acquisto} onChange={e=>f('prezzo_acquisto',+e.target.value)}/>
           <Inp label="Data Acquisto" type="date" value={form.data_acquisto} onChange={e=>f('data_acquisto',e.target.value)}/>
           <Inp label="Fornitore" value={form.fornitore} onChange={e=>f('fornitore',e.target.value)}/>
+          <div className="col-span-3">
+            <Sel label="Collega Mandato di Pagamento (opzionale)" value={form.mandato_id} onChange={e=>f('mandato_id',e.target.value)}>
+              <option value="">— Nessun mandato collegato —</option>
+              {(mandati||[]).filter(m=>(!m.veicolo_id||m.id===form.mandato_id)&&m.stato!=='annullato').map(m=>(
+                <option key={m.id} value={m.id}>{m.numero} — {m.beneficiario} — {fmt(m.importo)} ({fmtD(m.data)})</option>
+              ))}
+            </Sel>
+            {form.mandato_id&&<p className="text-xs text-[#5ac8fa] mt-1">✓ Il veicolo sarà collegato a questo mandato di pagamento</p>}
+          </div>
           <div className="col-span-3"><Txta label="Note" value={form.note} onChange={e=>f('note',e.target.value)}/></div>
         </div>
         <div className="flex justify-end gap-2 mt-5"><Btn variant="secondary" onClick={()=>setShow(false)}>Annulla</Btn><Btn onClick={save}><Check size={13}/>Salva Veicolo</Btn></div>
@@ -813,7 +827,7 @@ const MandatiPagamento=({mandati,onAdd,onEdit,onDel,settings})=>{
               <td className="px-4 py-2.5 font-mono font-bold text-blue-700">{m.numero}</td>
               <td className="px-4 py-2.5 text-[#86868b]">{fmtD(m.data)}</td>
               <td className="px-4 py-2.5 font-medium">{m.beneficiario}</td>
-              <td className="px-4 py-2.5 text-[#3a3a3c] max-w-48 truncate">{m.causale}{m.f24_id&&<span className="ml-1.5 px-1.5 py-0.5 rounded text-xs font-bold bg-amber-100 text-amber-700">F24</span>}</td>
+              <td className="px-4 py-2.5 text-[#3a3a3c] max-w-48 truncate">{m.causale}{m.f24_id&&<span className="ml-1.5 px-1.5 py-0.5 rounded text-xs font-bold bg-amber-100 text-amber-700">F24</span>}{m.veicolo_id&&<span className="ml-1.5 px-1.5 py-0.5 rounded text-xs font-bold bg-[#5ac8fa]/15 text-[#0071e3]">Veicolo</span>}</td>
               <td className="px-4 py-2.5 font-bold">{fmt(m.importo)}</td>
               <td className="px-4 py-2.5">{m.metodo}</td>
               <td className="px-4 py-2.5"><Badge c={STATI_M[m.stato]?.c}>{STATI_M[m.stato]?.l}</Badge></td>
@@ -865,8 +879,22 @@ const MandatiPagamento=({mandati,onAdd,onEdit,onDel,settings})=>{
     </div>
   );
 };
-const Bilancio=({sales,expenses,f24Records})=>{
+const FONTE_LABEL={vendita:'Vendita',spesa:'Spesa',mandato:'Mandato',manuale:'Manuale'};
+const FONTE_COLOR={vendita:'green',spesa:'amber',mandato:'purple',manuale:'blue'};
+const Bilancio=({sales,expenses,f24Records,cassaMovimenti,settings,cassaOps})=>{
   const [anno,setAnno]=useState(new Date().getFullYear());
+  const [showMov,setShowMov]=useState(false);
+  const [movForm,setMovForm]=useState({tipo:'entrata',data:today(),descrizione:'',importo:0});
+  const fondoIniziale=settings?.fondoCassaIniziale??200000;
+  const entrateTot=(cassaMovimenti||[]).filter(m=>m.tipo==='entrata').reduce((a,m)=>a+m.importo,0);
+  const usciteTot=(cassaMovimenti||[]).filter(m=>m.tipo==='uscita').reduce((a,m)=>a+m.importo,0);
+  const saldoAttuale=fondoIniziale+entrateTot-usciteTot;
+  const saveMov=()=>{
+    if(!movForm.descrizione||!movForm.importo)return;
+    cassaOps.add({id:uid(),...movForm,fonte:'manuale',fonte_id:null});
+    setShowMov(false);
+    setMovForm({tipo:'entrata',data:today(),descrizione:'',importo:0});
+  };
   const getData=mo=>{
     const sv=sales.filter(v=>{const d=new Date(v.data_vendita);return d.getFullYear()===anno&&d.getMonth()===mo;});
     const ex=expenses.filter(e=>{const d=new Date(e.data);return d.getFullYear()===anno&&d.getMonth()===mo;});
@@ -879,8 +907,61 @@ const Bilancio=({sales,expenses,f24Records})=>{
   const tot=md.reduce((a,m)=>({fat:a.fat+m.fat,mn:a.mn+m.mn,sp:a.sp+m.sp,im:a.im+m.im,utile:a.utile+m.utile,nv:a.nv+m.nv}),{fat:0,mn:0,sp:0,im:0,utile:0,nv:0});
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between"><h1 className="text-xl md:text-3xl font-semibold text-[#1d1d1f] tracking-tight">Bilancio</h1>
-        <Sel value={anno} onChange={e=>setAnno(+e.target.value)}>{[2024,2025,2026].map(y=><option key={y}>{y}</option>)}</Sel></div>
+      <div className="flex items-center justify-between">
+        <div><h1 className="text-xl md:text-3xl font-semibold text-[#1d1d1f] tracking-tight">Bilancio</h1></div>
+        <Sel value={anno} onChange={e=>setAnno(+e.target.value)}>{[2024,2025,2026].map(y=><option key={y}>{y}</option>)}</Sel>
+      </div>
+
+      {/* ── Fondo di Cassa ──────────────────────────────────── */}
+      <Card cls="p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-semibold flex items-center gap-2">
+            <Banknote size={15} className="text-[#5ac8fa]"/>Fondo di Cassa
+          </h3>
+          <Btn size="sm" onClick={()=>setShowMov(true)}><Plus size={12}/>Movimento manuale</Btn>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+          <KPI icon={Banknote} label="Fondo Iniziale" value={fmt(fondoIniziale)} color="blue"/>
+          <KPI icon={ArrowUpRight} label="Entrate Totali" value={fmt(entrateTot)} color="green" sub={`${(cassaMovimenti||[]).filter(m=>m.tipo==='entrata').length} movimenti`}/>
+          <KPI icon={ArrowDownRight} label="Uscite Totali" value={fmt(usciteTot)} color="amber" sub={`${(cassaMovimenti||[]).filter(m=>m.tipo==='uscita').length} movimenti`}/>
+          <KPI icon={Euro} label="Saldo Attuale" value={fmt(saldoAttuale)} color={saldoAttuale>=0?'celeste':'red'} sub={saldoAttuale>=50000?'▲ Buona liquidità':saldoAttuale>=10000?'▲ Sufficiente':'⚠ Bassa liquidità'}/>
+        </div>
+        {(cassaMovimenti||[]).length>0?(
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead><tr className="bg-[#f5f5f7] text-[#86868b] text-xs">
+                {['Data','Tipo','Descrizione','Fonte','Importo',''].map(h=><th key={h} className="px-3 py-2.5 text-left font-medium">{h}</th>)}
+              </tr></thead>
+              <tbody className="divide-y">
+                {[...(cassaMovimenti||[])].sort((a,b)=>new Date(b.data)-new Date(a.data)).map(m=>(
+                  <tr key={m.id} className="hover:bg-[#f5f5f7]/60">
+                    <td className="px-3 py-2.5 text-[#86868b] whitespace-nowrap">{fmtD(m.data)}</td>
+                    <td className="px-3 py-2.5">
+                      {m.tipo==='entrata'
+                        ?<span className="flex items-center gap-1 text-green-600 font-medium text-xs"><ArrowUpRight size={12}/>Entrata</span>
+                        :<span className="flex items-center gap-1 text-red-600 font-medium text-xs"><ArrowDownRight size={12}/>Uscita</span>}
+                    </td>
+                    <td className="px-3 py-2.5 text-[#1d1d1f] max-w-xs truncate">{m.descrizione}</td>
+                    <td className="px-3 py-2.5"><Badge c={FONTE_COLOR[m.fonte]||'gray'}>{FONTE_LABEL[m.fonte]||m.fonte}</Badge></td>
+                    <td className={`px-3 py-2.5 font-semibold whitespace-nowrap ${m.tipo==='entrata'?'text-green-600':'text-red-600'}`}>
+                      {m.tipo==='entrata'?'+':'-'}{fmt(m.importo)}
+                    </td>
+                    <td className="px-3 py-2.5">
+                      {m.fonte==='manuale'&&<IcoBtn onClick={()=>cassaOps.del(m.id)} icon={Trash2} color="red"/>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ):(
+          <div className="text-center py-6 text-[#86868b] text-sm border border-dashed border-[#e8e8ed] rounded-xl">
+            Nessun movimento registrato. I movimenti vengono creati automaticamente da vendite, spese e mandati eseguiti.
+          </div>
+        )}
+      </Card>
+
+      {/* ── KPI Bilancio annuale ─────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         <KPI icon={Euro} label="Fatturato" value={fmt(tot.fat)} color="celeste" sub={`${tot.nv} vendite`}/>
         <KPI icon={TrendingUp} label="Margine Netto" value={fmt(tot.mn)} color="green"/>
@@ -926,6 +1007,23 @@ const Bilancio=({sales,expenses,f24Records})=>{
           </tr></tfoot>
         </table></div>
       </Card>
+
+      {/* ── Modal Movimento Manuale ──────────────────────────── */}
+      <Modal open={showMov} onClose={()=>setShowMov(false)} title="Nuovo Movimento Manuale">
+        <div className="grid grid-cols-2 gap-4">
+          <Sel label="Tipo Movimento" value={movForm.tipo} onChange={e=>setMovForm(p=>({...p,tipo:e.target.value}))}>
+            <option value="entrata">Entrata (aumenta la cassa)</option>
+            <option value="uscita">Uscita (riduce la cassa)</option>
+          </Sel>
+          <Inp label="Data" type="date" value={movForm.data} onChange={e=>setMovForm(p=>({...p,data:e.target.value}))}/>
+          <div className="col-span-2"><Inp label="Descrizione *" value={movForm.descrizione} onChange={e=>setMovForm(p=>({...p,descrizione:e.target.value}))} placeholder="Es. Iniezione capitale, Prelievo titolare, Rimborso..."/></div>
+          <Inp label="Importo (€) *" type="number" step="0.01" value={movForm.importo} onChange={e=>setMovForm(p=>({...p,importo:+e.target.value}))}/>
+        </div>
+        <div className="flex justify-end gap-2 mt-5">
+          <Btn variant="secondary" onClick={()=>setShowMov(false)}>Annulla</Btn>
+          <Btn onClick={saveMov}><Check size={13}/>Registra Movimento</Btn>
+        </div>
+      </Modal>
     </div>
   );
 };
@@ -981,6 +1079,13 @@ const Impostazioni=({settings,onSave})=>{
           <Inp label="IBAN Aziendale" value={form.iban} onChange={e=>f('iban',e.target.value.toUpperCase())} placeholder="IT60 X054 2811 1010 0000 0123 456"/>
         </div>
       </Card>
+      <Card cls="p-6">
+        <h2 className="text-sm font-semibold text-[#1d1d1f] mb-1 flex items-center gap-2"><Euro size={14} className="text-[#5ac8fa]"/>Fondo di Cassa</h2>
+        <p className="text-xs text-[#86868b] mb-4">Capitale iniziale disponibile in cassa. Le vendite, spese e mandati eseguiti aggiornano automaticamente il saldo.</p>
+        <div className="max-w-xs">
+          <Inp label="Fondo di Cassa Iniziale (€)" type="number" step="1" value={form.fondoCassaIniziale??200000} onChange={e=>f('fondoCassaIniziale',+e.target.value)}/>
+        </div>
+      </Card>
       <div className="flex justify-end"><Btn onClick={save} variant={ok?'success':'primary'} cls="min-w-40">{ok?<><Check size={13}/>Salvato!</>:<><Check size={13}/>Salva Impostazioni</>}</Btn></div>
 
       {/* Credenziali accesso */}
@@ -1029,8 +1134,8 @@ export default function App() {
   const [sec,setSec]=useState('dashboard'),[settings,setSettings]=useState(DEFAULT_SETTINGS),
     [cars,setCars]=useState([]),[sales,setSales]=useState([]),
     [expenses,setExpenses]=useState([]),[f24,setF24]=useState([]),
-    [mandati,setMandati]=useState([]),[loading,setLoading]=useState(true),
-    [notif,setNotif]=useState(null);
+    [mandati,setMandati]=useState([]),[cassaMovimenti,setCassaMovimenti]=useState([]),
+    [loading,setLoading]=useState(true),[notif,setNotif]=useState(null);
   const notifTimer=useRef(null);
   const notify=useCallback((msg,type='success')=>{
     clearTimeout(notifTimer.current);
@@ -1041,13 +1146,14 @@ export default function App() {
   /* ── Caricamento dati da Supabase ─────────────────────────── */
   useEffect(()=>{
     const loadAll=async()=>{
-      const [rv,rs,re,rf,rm,ri]=await Promise.all([
+      const [rv,rs,re,rf,rm,ri,rc]=await Promise.all([
         supabase.from('veicoli').select('*').order('created_at'),
         supabase.from('vendite').select('*').order('created_at'),
         supabase.from('spese').select('*').order('created_at'),
         supabase.from('f24').select('*').order('created_at'),
         supabase.from('mandati').select('*').order('created_at'),
         supabase.from('impostazioni').select('*').eq('id',1).single(),
+        supabase.from('fondo_cassa_movimenti').select('*').order('created_at'),
       ]);
       if(rv.data) setCars(rv.data);
       if(rs.data) setSales(rs.data);
@@ -1055,6 +1161,7 @@ export default function App() {
       if(rf.data) setF24(rf.data);
       if(rm.data) setMandati(rm.data);
       if(ri.data) setSettings(settingsFromDb(ri.data));
+      if(rc.data) setCassaMovimenti(rc.data);
       setLoading(false);
     };
     loadAll();
@@ -1065,6 +1172,10 @@ export default function App() {
     add:async v=>{
       setCars(p=>[...p,v]);
       await supabase.from('veicoli').insert(v);
+      if(v.mandato_id){
+        setMandati(p=>p.map(m=>m.id===v.mandato_id?{...m,veicolo_id:v.id}:m));
+        supabase.from('mandati').update({veicolo_id:v.id}).eq('id',v.mandato_id);
+      }
       notify('Veicolo aggiunto al parco');
     },
     edit:async v=>{
@@ -1088,6 +1199,9 @@ export default function App() {
         setCars(p=>p.map(c=>c.id===s.veicolo_id?{...c,stato:'venduto'}:c));
         await supabase.from('veicoli').update({stato:'venduto'}).eq('id',s.veicolo_id);
       }
+      const mv={id:uid(),data:s.data_vendita,tipo:'entrata',descrizione:`Vendita ${s.targa} ${s.marca} ${s.modello} — ${s.cliente}`,importo:s.prezzo_vendita,fonte:'vendita',fonte_id:s.id};
+      setCassaMovimenti(p=>[...p,mv]);
+      supabase.from('fondo_cassa_movimenti').insert(mv);
       notify('Vendita registrata con successo');
     },
     edit:async s=>{
@@ -1098,6 +1212,8 @@ export default function App() {
     del:async id=>{
       setSales(p=>p.filter(v=>v.id!==id));
       await supabase.from('vendite').delete().eq('id',id);
+      setCassaMovimenti(p=>p.filter(v=>!(v.fonte==='vendita'&&v.fonte_id===id)));
+      supabase.from('fondo_cassa_movimenti').delete().eq('fonte','vendita').eq('fonte_id',id);
       notify('Vendita eliminata','info');
     }
   }),[notify]);
@@ -1107,6 +1223,9 @@ export default function App() {
     add:async e=>{
       setExpenses(p=>[...p,e]);
       await supabase.from('spese').insert(e);
+      const mv={id:uid(),data:e.data,tipo:'uscita',descrizione:`Spesa: ${e.descrizione} (${e.categoria})`,importo:e.importo,fonte:'spesa',fonte_id:e.id};
+      setCassaMovimenti(p=>[...p,mv]);
+      supabase.from('fondo_cassa_movimenti').insert(mv);
       notify('Spesa aggiunta');
     },
     edit:async e=>{
@@ -1117,6 +1236,8 @@ export default function App() {
     del:async id=>{
       setExpenses(p=>p.filter(v=>v.id!==id));
       await supabase.from('spese').delete().eq('id',id);
+      setCassaMovimenti(p=>p.filter(v=>!(v.fonte==='spesa'&&v.fonte_id===id)));
+      supabase.from('fondo_cassa_movimenti').delete().eq('fonte','spesa').eq('fonte_id',id);
       notify('Spesa eliminata','info');
     }
   }),[notify]);
@@ -1158,17 +1279,29 @@ export default function App() {
     edit:async m=>{
       setMandati(p=>{
         const prev=p.find(v=>v.id===m.id);
-        if(m.stato==='eseguito'&&prev?.stato!=='eseguito'&&m.f24_id){
-          setF24(fp=>fp.map(r=>r.id===m.f24_id?{...r,stato:'pagato',data_pagamento:m.data_ese||today()}:r));
-          supabase.from('f24').update({stato:'pagato',data_pagamento:m.data_ese||today()}).eq('id',m.f24_id);
-          notify('Mandato eseguito — F24 marcato come pagato automaticamente');
+        if(m.stato==='eseguito'&&prev?.stato!=='eseguito'){
+          const mv={id:uid(),data:m.data_ese||today(),tipo:'uscita',descrizione:`Mandato ${m.numero} — ${m.causale||''} — ${m.beneficiario}`,importo:m.importo,fonte:'mandato',fonte_id:m.id};
+          setCassaMovimenti(fp=>[...fp,mv]);
+          supabase.from('fondo_cassa_movimenti').insert(mv);
+          if(m.f24_id){
+            setF24(fp=>fp.map(r=>r.id===m.f24_id?{...r,stato:'pagato',data_pagamento:m.data_ese||today()}:r));
+            supabase.from('f24').update({stato:'pagato',data_pagamento:m.data_ese||today()}).eq('id',m.f24_id);
+            notify('Mandato eseguito — F24 aggiornato e cassa scalata');
+          } else notify('Mandato eseguito — importo scalato dalla cassa');
         } else notify('Mandato aggiornato');
         return p.map(v=>v.id===m.id?m:v);
       });
       await supabase.from('mandati').upsert(m);
     },
     del:async id=>{
-      setMandati(p=>p.filter(v=>v.id!==id));
+      setMandati(p=>{
+        const m=p.find(v=>v.id===id);
+        if(m?.stato==='eseguito'){
+          setCassaMovimenti(fp=>fp.filter(v=>!(v.fonte==='mandato'&&v.fonte_id===id)));
+          supabase.from('fondo_cassa_movimenti').delete().eq('fonte','mandato').eq('fonte_id',id);
+        }
+        return p.filter(v=>v.id!==id);
+      });
       await supabase.from('mandati').delete().eq('id',id);
       notify('Mandato eliminato','info');
     }
@@ -1180,6 +1313,20 @@ export default function App() {
     await supabase.from('impostazioni').upsert(settingsToDb(s));
     notify('Impostazioni salvate');
   },[notify]);
+
+  /* ── CRUD Fondo Cassa ─────────────────────────────────────── */
+  const cassaOps=useMemo(()=>({
+    add:async mv=>{
+      setCassaMovimenti(p=>[...p,mv]);
+      await supabase.from('fondo_cassa_movimenti').insert(mv);
+      notify('Movimento registrato in cassa');
+    },
+    del:async id=>{
+      setCassaMovimenti(p=>p.filter(v=>v.id!==id));
+      await supabase.from('fondo_cassa_movimenti').delete().eq('id',id);
+      notify('Movimento eliminato','info');
+    },
+  }),[notify]);
   if(!authed) return <LoginScreen onLogin={()=>setAuthed(true)} dark={dark} toggleDark={toggleDark}/>;
   if(loading) return (
     <div className="flex h-screen items-center justify-center" style={{background:'#f5f5f7'}}>
@@ -1205,14 +1352,14 @@ export default function App() {
           </button>
         </div>
         <div className="p-4 md:p-7 pt-16 md:pt-7">
-        {sec==='dashboard'&&<Dashboard cars={cars} sales={sales} expenses={expenses} f24={f24} mandati={mandati} onNav={setSec}/>}
-        {sec==='parco'&&<ParcoAuto cars={cars} onAdd={cOps.add} onEdit={cOps.edit} onDel={cOps.del}/>}
+        {sec==='dashboard'&&<Dashboard cars={cars} sales={sales} expenses={expenses} f24={f24} mandati={mandati} onNav={setSec} cassaMovimenti={cassaMovimenti} settings={settings}/>}
+        {sec==='parco'&&<ParcoAuto cars={cars} mandati={mandati} onAdd={cOps.add} onEdit={cOps.edit} onDel={cOps.del}/>}
         {sec==='vendite'&&<Vendite sales={sales} cars={cars} onAdd={sOps.add} onEdit={sOps.edit} onDel={sOps.del}/>}
         {sec==='spese'&&<Spese expenses={expenses} onAdd={eOps.add} onEdit={eOps.edit} onDel={eOps.del}/>}
         {sec==='iva'&&<GestioneIVA sales={sales} settings={settings} f24={f24}/>}
         {sec==='f24'&&<F24Manager f24Records={f24} onAdd={fOps.add} onEdit={fOps.edit} onDel={fOps.del} settings={settings}/>}
         {sec==='mandati'&&<MandatiPagamento mandati={mandati} onAdd={mOps.add} onEdit={mOps.edit} onDel={mOps.del} settings={settings}/>}
-        {sec==='bilancio'&&<Bilancio sales={sales} expenses={expenses} f24Records={f24}/>}
+        {sec==='bilancio'&&<Bilancio sales={sales} expenses={expenses} f24Records={f24} cassaMovimenti={cassaMovimenti} settings={settings} cassaOps={cassaOps}/>}
         {sec==='impostazioni'&&<Impostazioni settings={settings} onSave={saveSettings}/>}
       </div>
       </div>
