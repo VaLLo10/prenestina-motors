@@ -282,7 +282,10 @@ const Sidebar = ({active,onNav,s,onLogout,open,onClose}) => (
 const Dashboard = ({cars,sales,expenses,f24,onNav,cassaMovimenti,settings}) => {
   const yr=new Date().getFullYear(),mo=new Date().getMonth();
   const fondoIniziale=settings?.fondoCassaIniziale??200000;
-  const saldoCassa=fondoIniziale+(cassaMovimenti||[]).filter(m=>m.tipo==='entrata').reduce((a,m)=>a+m.importo,0)-(cassaMovimenti||[]).filter(m=>m.tipo==='uscita').reduce((a,m)=>a+m.importo,0);
+  const utileNettoDash=sales.reduce((a,v)=>a+margN(v.prezzo_vendita,v.prezzo_acquisto),0)-expenses.reduce((a,e)=>a+e.importo,0)-f24.filter(r=>r.stato==='pagato').reduce((a,r)=>a+r.importo,0);
+  const manualEntrDash=(cassaMovimenti||[]).filter(m=>m.tipo==='entrata'&&m.fonte==='manuale').reduce((a,m)=>a+m.importo,0);
+  const manualUscDash=(cassaMovimenti||[]).filter(m=>m.tipo==='uscita'&&m.fonte==='manuale').reduce((a,m)=>a+m.importo,0);
+  const saldoCassa=fondoIniziale+utileNettoDash+manualEntrDash-manualUscDash;
   const {fat,mn,sp,iva,ivaGiaPagata,disp,scad,chart,pieD,rec,smLen}=useMemo(()=>{
     const oggi=new Date();
     const sm=sales.filter(s=>{const d=new Date(s.data_vendita);return d.getFullYear()===yr&&d.getMonth()===mo;});
@@ -886,9 +889,18 @@ const Bilancio=({sales,expenses,f24Records,cassaMovimenti,settings,cassaOps})=>{
   const [showMov,setShowMov]=useState(false);
   const [movForm,setMovForm]=useState({tipo:'entrata',data:today(),descrizione:'',importo:0});
   const fondoIniziale=settings?.fondoCassaIniziale??200000;
+  // Utile netto totale (tutti gli anni): margine netto vendite - spese operative - imposte pagate
+  const utileNettoTotale=
+    sales.reduce((a,v)=>a+margN(v.prezzo_vendita,v.prezzo_acquisto),0)
+    -expenses.reduce((a,e)=>a+e.importo,0)
+    -f24Records.filter(r=>r.stato==='pagato').reduce((a,r)=>a+r.importo,0);
+  // Per il saldo usa solo movimenti manuali (vendite/spese già dentro l'utile netto)
+  const manualEntrate=(cassaMovimenti||[]).filter(m=>m.tipo==='entrata'&&m.fonte==='manuale').reduce((a,m)=>a+m.importo,0);
+  const manualUscite=(cassaMovimenti||[]).filter(m=>m.tipo==='uscita'&&m.fonte==='manuale').reduce((a,m)=>a+m.importo,0);
+  // Totali movimenti per la tabella storico (tutti, informativo)
   const entrateTot=(cassaMovimenti||[]).filter(m=>m.tipo==='entrata').reduce((a,m)=>a+m.importo,0);
   const usciteTot=(cassaMovimenti||[]).filter(m=>m.tipo==='uscita').reduce((a,m)=>a+m.importo,0);
-  const saldoAttuale=fondoIniziale+entrateTot-usciteTot;
+  const saldoAttuale=fondoIniziale+utileNettoTotale+manualEntrate-manualUscite;
   const saveMov=()=>{
     if(!movForm.descrizione||!movForm.importo)return;
     cassaOps.add({id:uid(),...movForm,fonte:'manuale',fonte_id:null});
@@ -922,8 +934,8 @@ const Bilancio=({sales,expenses,f24Records,cassaMovimenti,settings,cassaOps})=>{
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
           <KPI icon={Banknote} label="Fondo Iniziale" value={fmt(fondoIniziale)} color="blue"/>
-          <KPI icon={ArrowUpRight} label="Entrate Totali" value={fmt(entrateTot)} color="green" sub={`${(cassaMovimenti||[]).filter(m=>m.tipo==='entrata').length} movimenti`}/>
-          <KPI icon={ArrowDownRight} label="Uscite Totali" value={fmt(usciteTot)} color="amber" sub={`${(cassaMovimenti||[]).filter(m=>m.tipo==='uscita').length} movimenti`}/>
+          <KPI icon={TrendingUp} label="Utile Netto Totale" value={fmt(utileNettoTotale)} color={utileNettoTotale>=0?'green':'red'} sub="Margine − spese − tasse (tutti gli anni)"/>
+          <KPI icon={ArrowUpRight} label="Movimenti Manuali" value={fmt(manualEntrate-manualUscite)} color={(manualEntrate-manualUscite)>=0?'celeste':'amber'} sub={`${(cassaMovimenti||[]).filter(m=>m.fonte==='manuale').length} mov. manuali`}/>
           <KPI icon={Euro} label="Saldo Attuale" value={fmt(saldoAttuale)} color={saldoAttuale>=0?'celeste':'red'} sub={saldoAttuale>=50000?'▲ Buona liquidità':saldoAttuale>=10000?'▲ Sufficiente':'⚠ Bassa liquidità'}/>
         </div>
         {(cassaMovimenti||[]).length>0?(
