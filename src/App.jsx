@@ -1287,8 +1287,19 @@ export default function App() {
       setMandati(p=>[...p,m]);
       const mDb={...m,data_ese:m.data_ese||null};
       const {error}=await supabase.from('mandati').insert(mDb);
-      if(error){setMandati(p=>p.filter(v=>v.id!==m.id));notify('Errore salvataggio mandato: '+error.message,'error');}
-      else notify('Mandato creato');
+      if(error){
+        setMandati(p=>p.filter(v=>v.id!==m.id));
+        notify('Errore salvataggio mandato: '+error.message,'error');
+      } else {
+        if(m.stato==='eseguito'){
+          const mv={id:uid(),data:m.data_ese||today(),tipo:'uscita',descrizione:`Mandato ${m.numero} — ${m.causale||''} — ${m.beneficiario}`,importo:m.importo,fonte:'mandato',fonte_id:m.id};
+          setCassaMovimenti(p=>[...p,mv]);
+          supabase.from('fondo_cassa_movimenti').insert(mv);
+          notify('Mandato creato — importo scalato dalla cassa');
+        } else {
+          notify('Mandato creato');
+        }
+      }
     },
     edit:async m=>{
       setMandati(p=>{
