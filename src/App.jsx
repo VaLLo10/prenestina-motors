@@ -1261,15 +1261,14 @@ export default function App() {
     add:async r=>{
       setF24(p=>[...p,r]);
       await supabase.from('f24').insert(r);
-      setMandati(p=>{
-        const nNum=`MP${String(p.length+1).padStart(4,'0')}`;
-        const nm={id:uid(),numero:nNum,data:today(),beneficiario:'Agenzia delle Entrate',cf_ben:'80415740580',
-          causale:`F24 cod. ${r.codice_tributo} — ${r.descrizione||TRIBUTI_IVA_TRIM.find(t=>t.codice===r.codice_tributo)?.desc||r.codice_tributo} — Anno ${r.anno}`,
-          importo:r.importo,metodo:'Bonifico',iban_ben:'',stato:'in_attesa',data_ese:null,note:'',f24_id:r.id};
-        supabase.from('mandati').insert(nm);
-        return [...p,nm];
-      });
-      notify('F24 aggiunto — mandato di pagamento creato automaticamente');
+      const nNum=`MP${String(mandatiRef.current.length+1).padStart(4,'0')}`;
+      const nm={id:uid(),numero:nNum,data:today(),beneficiario:'Agenzia delle Entrate',cf_ben:'80415740580',
+        causale:`F24 cod. ${r.codice_tributo} — ${r.descrizione||TRIBUTI_IVA_TRIM.find(t=>t.codice===r.codice_tributo)?.desc||r.codice_tributo} — Anno ${r.anno}`,
+        importo:r.importo,metodo:'Bonifico',iban_ben:'',stato:'in_attesa',data_ese:null,note:'',f24_id:r.id};
+      setMandati(p=>[...p,nm]);
+      const {error:mErr}=await supabase.from('mandati').insert(nm);
+      if(mErr){setMandati(p=>p.filter(v=>v.id!==nm.id));notify('Errore mandato F24: '+mErr.message,'error');}
+      else notify('F24 aggiunto — mandato di pagamento creato automaticamente');
     },
     edit:async r=>{
       setF24(p=>p.map(v=>v.id===r.id?r:v));
@@ -1287,7 +1286,7 @@ export default function App() {
   const mOps=useMemo(()=>({
     add:async m=>{
       setMandati(p=>[...p,m]);
-      const mDb={...m,data_ese:m.data_ese||null};
+      const mDb={id:m.id,numero:m.numero,data:m.data||null,beneficiario:m.beneficiario||'',cf_ben:m.cf_ben||'',causale:m.causale||'',importo:m.importo||0,metodo:m.metodo||'Bonifico',iban_ben:m.iban_ben||'',stato:m.stato||'in_attesa',data_ese:m.data_ese||null,note:m.note||'',veicolo_id:m.veicolo_id||null,f24_id:m.f24_id||null};
       const {error}=await supabase.from('mandati').insert(mDb);
       if(error){
         setMandati(p=>p.filter(v=>v.id!==m.id));
@@ -1306,7 +1305,7 @@ export default function App() {
     edit:async m=>{
       const prev=mandatiRef.current.find(v=>v.id===m.id);
       setMandati(p=>p.map(v=>v.id===m.id?m:v));
-      const mDb={...m,data_ese:m.data_ese||null};
+      const mDb={id:m.id,numero:m.numero,data:m.data||null,beneficiario:m.beneficiario||'',cf_ben:m.cf_ben||'',causale:m.causale||'',importo:m.importo||0,metodo:m.metodo||'Bonifico',iban_ben:m.iban_ben||'',stato:m.stato||'in_attesa',data_ese:m.data_ese||null,note:m.note||'',veicolo_id:m.veicolo_id||null,f24_id:m.f24_id||null};
       await supabase.from('mandati').upsert(mDb);
       if(m.stato==='eseguito'&&prev?.stato!=='eseguito'){
         const mv={id:uid(),data:m.data_ese||today(),tipo:'uscita',descrizione:`Mandato ${m.numero} — ${m.causale||''} — ${m.beneficiario}`,importo:m.importo,fonte:'mandato',fonte_id:m.id};
