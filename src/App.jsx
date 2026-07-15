@@ -1154,7 +1154,7 @@ export default function App() {
   const notify=useCallback((msg,type='success')=>{
     clearTimeout(notifTimer.current);
     setNotif({msg,type});
-    notifTimer.current=setTimeout(()=>setNotif(null),3000);
+    notifTimer.current=setTimeout(()=>setNotif(null),type==='error'?10000:3000);
   },[]);
 
   /* ── Caricamento dati da Supabase ─────────────────────────── */
@@ -1287,10 +1287,18 @@ export default function App() {
     add:async m=>{
       setMandati(p=>[...p,m]);
       const mDb={id:m.id,numero:m.numero,data:m.data||null,beneficiario:m.beneficiario||'',cf_ben:m.cf_ben||'',causale:m.causale||'',importo:m.importo||0,metodo:m.metodo||'Bonifico',iban_ben:m.iban_ben||'',stato:m.stato||'in_attesa',data_ese:m.data_ese||null,note:m.note||'',veicolo_id:m.veicolo_id||null,...(m.f24_id?{f24_id:m.f24_id}:{})};
-      const {error}=await supabase.from('mandati').insert(mDb);
+      let {error}=await supabase.from('mandati').insert(mDb);
+      if(error){
+        console.error('[mOps.add] insert error:', error);
+        // Retry con upsert: se il record è già stato inserito (risposta persa), lo aggiorna; se no, lo crea
+        await new Promise(r=>setTimeout(r,700));
+        const retry=await supabase.from('mandati').upsert(mDb);
+        console.error('[mOps.add] retry result:', retry.error);
+        error=retry.error;
+      }
       if(error){
         setMandati(p=>p.filter(v=>v.id!==m.id));
-        notify('Errore salvataggio mandato: '+error.message,'error');
+        notify('Errore mandato ['+error.code+']: '+error.message,'error');
       } else {
         if(m.stato==='eseguito'){
           const mv={id:uid(),data:m.data_ese||today(),tipo:'uscita',descrizione:`Mandato ${m.numero} — ${m.causale||''} — ${m.beneficiario}`,importo:m.importo,fonte:'mandato',fonte_id:m.id};
