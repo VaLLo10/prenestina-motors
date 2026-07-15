@@ -1149,6 +1149,8 @@ export default function App() {
     [mandati,setMandati]=useState([]),[cassaMovimenti,setCassaMovimenti]=useState([]),
     [loading,setLoading]=useState(true),[notif,setNotif]=useState(null);
   const notifTimer=useRef(null);
+  const mandatiRef=useRef([]);
+  useEffect(()=>{mandatiRef.current=mandati;},[mandati]);
   const notify=useCallback((msg,type='success')=>{
     clearTimeout(notifTimer.current);
     setNotif({msg,type});
@@ -1302,32 +1304,29 @@ export default function App() {
       }
     },
     edit:async m=>{
-      setMandati(p=>{
-        const prev=p.find(v=>v.id===m.id);
-        if(m.stato==='eseguito'&&prev?.stato!=='eseguito'){
-          const mv={id:uid(),data:m.data_ese||today(),tipo:'uscita',descrizione:`Mandato ${m.numero} — ${m.causale||''} — ${m.beneficiario}`,importo:m.importo,fonte:'mandato',fonte_id:m.id};
-          setCassaMovimenti(fp=>[...fp,mv]);
-          supabase.from('fondo_cassa_movimenti').insert(mv);
-          if(m.f24_id){
-            setF24(fp=>fp.map(r=>r.id===m.f24_id?{...r,stato:'pagato',data_pagamento:m.data_ese||today()}:r));
-            supabase.from('f24').update({stato:'pagato',data_pagamento:m.data_ese||today()}).eq('id',m.f24_id);
-            notify('Mandato eseguito — F24 aggiornato e cassa scalata');
-          } else notify('Mandato eseguito — importo scalato dalla cassa');
-        } else notify('Mandato aggiornato');
-        return p.map(v=>v.id===m.id?m:v);
-      });
+      const prev=mandatiRef.current.find(v=>v.id===m.id);
+      setMandati(p=>p.map(v=>v.id===m.id?m:v));
       const mDb={...m,data_ese:m.data_ese||null};
       await supabase.from('mandati').upsert(mDb);
+      if(m.stato==='eseguito'&&prev?.stato!=='eseguito'){
+        const mv={id:uid(),data:m.data_ese||today(),tipo:'uscita',descrizione:`Mandato ${m.numero} — ${m.causale||''} — ${m.beneficiario}`,importo:m.importo,fonte:'mandato',fonte_id:m.id};
+        setCassaMovimenti(p=>[...p,mv]);
+        const {error:mvErr}=await supabase.from('fondo_cassa_movimenti').insert(mv);
+        if(mvErr) notify('Errore cassa: '+mvErr.message,'error');
+        if(m.f24_id){
+          setF24(fp=>fp.map(r=>r.id===m.f24_id?{...r,stato:'pagato',data_pagamento:m.data_ese||today()}:r));
+          supabase.from('f24').update({stato:'pagato',data_pagamento:m.data_ese||today()}).eq('id',m.f24_id);
+          notify('Mandato eseguito — F24 aggiornato e cassa scalata');
+        } else notify('Mandato eseguito — importo scalato dalla cassa');
+      } else notify('Mandato aggiornato');
     },
     del:async id=>{
-      setMandati(p=>{
-        const m=p.find(v=>v.id===id);
-        if(m?.stato==='eseguito'){
-          setCassaMovimenti(fp=>fp.filter(v=>!(v.fonte==='mandato'&&v.fonte_id===id)));
-          supabase.from('fondo_cassa_movimenti').delete().eq('fonte','mandato').eq('fonte_id',id);
-        }
-        return p.filter(v=>v.id!==id);
-      });
+      const m=mandatiRef.current.find(v=>v.id===id);
+      setMandati(p=>p.filter(v=>v.id!==id));
+      if(m?.stato==='eseguito'){
+        setCassaMovimenti(p=>p.filter(v=>!(v.fonte==='mandato'&&v.fonte_id===id)));
+        supabase.from('fondo_cassa_movimenti').delete().eq('fonte','mandato').eq('fonte_id',id);
+      }
       await supabase.from('mandati').delete().eq('id',id);
       notify('Mandato eliminato','info');
     }
