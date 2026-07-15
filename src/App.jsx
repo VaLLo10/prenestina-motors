@@ -296,7 +296,9 @@ const Dashboard = ({cars,sales,expenses,f24,onNav,cassaMovimenti,settings,mandat
     const em=expenses.filter(e=>{const d=new Date(e.data);return d.getFullYear()===yr&&d.getMonth()===mo;});
     const fat=sm.reduce((a,v)=>a+v.prezzo_vendita,0),mn=sm.reduce((a,v)=>a+margN(v.prezzo_vendita,v.prezzo_acquisto),0);
     const sp=em.reduce((a,e)=>a+e.importo,0);
-    const totIvaAnno=+sales.filter(s=>new Date(s.data_vendita).getFullYear()===yr).reduce((a,v)=>a+ivaM(v.prezzo_vendita,v.prezzo_acquisto),0).toFixed(2);
+    const salesAnno=sales.filter(s=>new Date(s.data_vendita).getFullYear()===yr);
+    const totMLAnno=salesAnno.reduce((a,v)=>a+Math.max(0,v.prezzo_vendita-v.prezzo_acquisto),0);
+    const totIvaAnno=+(totMLAnno*22/122).toFixed(2);
     const ivaGiaPagata=+f24.filter(r=>r.stato==='pagato'&&r.anno===yr&&DASH_IVA_CODES.includes(r.codice_tributo)).reduce((a,r)=>a+r.importo,0).toFixed(2);
     const iva=Math.max(0,+(totIvaAnno-ivaGiaPagata).toFixed(2));
     const disp=cars.filter(c=>c.stato==='disponibile').length;
