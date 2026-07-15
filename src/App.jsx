@@ -959,7 +959,7 @@ const Bilancio=({sales,expenses,f24Records,cassaMovimenti,settings,cassaOps})=>{
                       {m.tipo==='entrata'?'+':'-'}{fmt(m.importo)}
                     </td>
                     <td className="px-3 py-2.5">
-                      {m.fonte==='manuale'&&<IcoBtn onClick={()=>cassaOps.del(m.id)} icon={Trash2} color="red"/>}
+                      <IcoBtn onClick={()=>cassaOps.del(m.id)} icon={Trash2} color="red"/>
                     </td>
                   </tr>
                 ))}
