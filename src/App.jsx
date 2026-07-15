@@ -1263,7 +1263,7 @@ export default function App() {
         const nNum=`MP${String(p.length+1).padStart(4,'0')}`;
         const nm={id:uid(),numero:nNum,data:today(),beneficiario:'Agenzia delle Entrate',cf_ben:'80415740580',
           causale:`F24 cod. ${r.codice_tributo} — ${r.descrizione||TRIBUTI_IVA_TRIM.find(t=>t.codice===r.codice_tributo)?.desc||r.codice_tributo} — Anno ${r.anno}`,
-          importo:r.importo,metodo:'Bonifico',iban_ben:'',stato:'in_attesa',data_ese:'',note:'',f24_id:r.id};
+          importo:r.importo,metodo:'Bonifico',iban_ben:'',stato:'in_attesa',data_ese:null,note:'',f24_id:r.id};
         supabase.from('mandati').insert(nm);
         return [...p,nm];
       });
@@ -1285,8 +1285,10 @@ export default function App() {
   const mOps=useMemo(()=>({
     add:async m=>{
       setMandati(p=>[...p,m]);
-      await supabase.from('mandati').insert(m);
-      notify('Mandato creato');
+      const mDb={...m,data_ese:m.data_ese||null};
+      const {error}=await supabase.from('mandati').insert(mDb);
+      if(error){setMandati(p=>p.filter(v=>v.id!==m.id));notify('Errore salvataggio mandato: '+error.message,'error');}
+      else notify('Mandato creato');
     },
     edit:async m=>{
       setMandati(p=>{
@@ -1303,7 +1305,8 @@ export default function App() {
         } else notify('Mandato aggiornato');
         return p.map(v=>v.id===m.id?m:v);
       });
-      await supabase.from('mandati').upsert(m);
+      const mDb={...m,data_ese:m.data_ese||null};
+      await supabase.from('mandati').upsert(mDb);
     },
     del:async id=>{
       setMandati(p=>{
