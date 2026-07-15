@@ -283,9 +283,9 @@ const Dashboard = ({cars,sales,expenses,f24,onNav,cassaMovimenti,settings}) => {
   const yr=new Date().getFullYear(),mo=new Date().getMonth();
   const fondoIniziale=settings?.fondoCassaIniziale??200000;
   const utileNettoDash=sales.reduce((a,v)=>a+margN(v.prezzo_vendita,v.prezzo_acquisto),0)-expenses.reduce((a,e)=>a+e.importo,0)-f24.filter(r=>r.stato==='pagato').reduce((a,r)=>a+r.importo,0);
-  const manualEntrDash=(cassaMovimenti||[]).filter(m=>m.tipo==='entrata'&&m.fonte==='manuale').reduce((a,m)=>a+m.importo,0);
-  const manualUscDash=(cassaMovimenti||[]).filter(m=>m.tipo==='uscita'&&m.fonte==='manuale').reduce((a,m)=>a+m.importo,0);
-  const saldoCassa=fondoIniziale+utileNettoDash+manualEntrDash-manualUscDash;
+  const cassaEntrDash=(cassaMovimenti||[]).filter(m=>m.tipo==='entrata'&&m.fonte!=='vendita'&&m.fonte!=='spesa').reduce((a,m)=>a+m.importo,0);
+  const cassaUscDash=(cassaMovimenti||[]).filter(m=>m.tipo==='uscita'&&m.fonte!=='vendita'&&m.fonte!=='spesa').reduce((a,m)=>a+m.importo,0);
+  const saldoCassa=fondoIniziale+utileNettoDash+cassaEntrDash-cassaUscDash;
   const {fat,mn,sp,iva,ivaGiaPagata,disp,scad,chart,pieD,rec,smLen}=useMemo(()=>{
     const oggi=new Date();
     const sm=sales.filter(s=>{const d=new Date(s.data_vendita);return d.getFullYear()===yr&&d.getMonth()===mo;});
@@ -894,13 +894,13 @@ const Bilancio=({sales,expenses,f24Records,cassaMovimenti,settings,cassaOps})=>{
     sales.reduce((a,v)=>a+margN(v.prezzo_vendita,v.prezzo_acquisto),0)
     -expenses.reduce((a,e)=>a+e.importo,0)
     -f24Records.filter(r=>r.stato==='pagato').reduce((a,r)=>a+r.importo,0);
-  // Per il saldo usa solo movimenti manuali (vendite/spese già dentro l'utile netto)
-  const manualEntrate=(cassaMovimenti||[]).filter(m=>m.tipo==='entrata'&&m.fonte==='manuale').reduce((a,m)=>a+m.importo,0);
-  const manualUscite=(cassaMovimenti||[]).filter(m=>m.tipo==='uscita'&&m.fonte==='manuale').reduce((a,m)=>a+m.importo,0);
+  // Saldo: utile netto + movimenti manuali + mandati eseguiti (vendite/spese già nell'utile netto)
+  const cassaEntrate=(cassaMovimenti||[]).filter(m=>m.tipo==='entrata'&&m.fonte!=='vendita'&&m.fonte!=='spesa').reduce((a,m)=>a+m.importo,0);
+  const cassaUscite=(cassaMovimenti||[]).filter(m=>m.tipo==='uscita'&&m.fonte!=='vendita'&&m.fonte!=='spesa').reduce((a,m)=>a+m.importo,0);
   // Totali movimenti per la tabella storico (tutti, informativo)
   const entrateTot=(cassaMovimenti||[]).filter(m=>m.tipo==='entrata').reduce((a,m)=>a+m.importo,0);
   const usciteTot=(cassaMovimenti||[]).filter(m=>m.tipo==='uscita').reduce((a,m)=>a+m.importo,0);
-  const saldoAttuale=fondoIniziale+utileNettoTotale+manualEntrate-manualUscite;
+  const saldoAttuale=fondoIniziale+utileNettoTotale+cassaEntrate-cassaUscite;
   const saveMov=()=>{
     if(!movForm.descrizione||!movForm.importo)return;
     cassaOps.add({id:uid(),...movForm,fonte:'manuale',fonte_id:null});
@@ -935,7 +935,7 @@ const Bilancio=({sales,expenses,f24Records,cassaMovimenti,settings,cassaOps})=>{
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
           <KPI icon={Banknote} label="Fondo Iniziale" value={fmt(fondoIniziale)} color="blue"/>
           <KPI icon={TrendingUp} label="Utile Netto Totale" value={fmt(utileNettoTotale)} color={utileNettoTotale>=0?'green':'red'} sub="Margine − spese − tasse (tutti gli anni)"/>
-          <KPI icon={ArrowUpRight} label="Movimenti Manuali" value={fmt(manualEntrate-manualUscite)} color={(manualEntrate-manualUscite)>=0?'celeste':'amber'} sub={`${(cassaMovimenti||[]).filter(m=>m.fonte==='manuale').length} mov. manuali`}/>
+          <KPI icon={ArrowUpRight} label="Mandati + Manuali" value={fmt(cassaEntrate-cassaUscite)} color={(cassaEntrate-cassaUscite)>=0?'celeste':'amber'} sub={`${(cassaMovimenti||[]).filter(m=>m.fonte==='mandato'||m.fonte==='manuale').length} movimenti`}/>
           <KPI icon={Euro} label="Saldo Attuale" value={fmt(saldoAttuale)} color={saldoAttuale>=0?'celeste':'red'} sub={saldoAttuale>=50000?'▲ Buona liquidità':saldoAttuale>=10000?'▲ Sufficiente':'⚠ Bassa liquidità'}/>
         </div>
         {(cassaMovimenti||[]).length>0?(
@@ -1286,7 +1286,7 @@ export default function App() {
   const mOps=useMemo(()=>({
     add:async m=>{
       setMandati(p=>[...p,m]);
-      const mDb={id:m.id,numero:m.numero,data:m.data||null,beneficiario:m.beneficiario||'',cf_ben:m.cf_ben||'',causale:m.causale||'',importo:m.importo||0,metodo:m.metodo||'Bonifico',iban_ben:m.iban_ben||'',stato:m.stato||'in_attesa',data_ese:m.data_ese||null,note:m.note||'',veicolo_id:m.veicolo_id||null,f24_id:m.f24_id||null};
+      const mDb={id:m.id,numero:m.numero,data:m.data||null,beneficiario:m.beneficiario||'',cf_ben:m.cf_ben||'',causale:m.causale||'',importo:m.importo||0,metodo:m.metodo||'Bonifico',iban_ben:m.iban_ben||'',stato:m.stato||'in_attesa',data_ese:m.data_ese||null,note:m.note||'',veicolo_id:m.veicolo_id||null,...(m.f24_id?{f24_id:m.f24_id}:{})};
       const {error}=await supabase.from('mandati').insert(mDb);
       if(error){
         setMandati(p=>p.filter(v=>v.id!==m.id));
@@ -1305,7 +1305,7 @@ export default function App() {
     edit:async m=>{
       const prev=mandatiRef.current.find(v=>v.id===m.id);
       setMandati(p=>p.map(v=>v.id===m.id?m:v));
-      const mDb={id:m.id,numero:m.numero,data:m.data||null,beneficiario:m.beneficiario||'',cf_ben:m.cf_ben||'',causale:m.causale||'',importo:m.importo||0,metodo:m.metodo||'Bonifico',iban_ben:m.iban_ben||'',stato:m.stato||'in_attesa',data_ese:m.data_ese||null,note:m.note||'',veicolo_id:m.veicolo_id||null,f24_id:m.f24_id||null};
+      const mDb={id:m.id,numero:m.numero,data:m.data||null,beneficiario:m.beneficiario||'',cf_ben:m.cf_ben||'',causale:m.causale||'',importo:m.importo||0,metodo:m.metodo||'Bonifico',iban_ben:m.iban_ben||'',stato:m.stato||'in_attesa',data_ese:m.data_ese||null,note:m.note||'',veicolo_id:m.veicolo_id||null,...(m.f24_id?{f24_id:m.f24_id}:{})};
       await supabase.from('mandati').upsert(mDb);
       if(m.stato==='eseguito'&&prev?.stato!=='eseguito'){
         const mv={id:uid(),data:m.data_ese||today(),tipo:'uscita',descrizione:`Mandato ${m.numero} — ${m.causale||''} — ${m.beneficiario}`,importo:m.importo,fonte:'mandato',fonte_id:m.id};
