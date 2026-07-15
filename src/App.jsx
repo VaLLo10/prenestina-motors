@@ -282,13 +282,14 @@ const Sidebar = ({active,onNav,s,onLogout,open,onClose}) => (
 const Dashboard = ({cars,sales,expenses,f24,onNav,cassaMovimenti,settings,mandati}) => {
   const yr=new Date().getFullYear(),mo=new Date().getMonth();
   const fondoIniziale=settings?.fondoCassaIniziale??200000;
-  // Saldo cassa: fondo iniziale + (margN+pa per ogni vendita) - spese + manuali
-  // I mandati NON scalano il saldo: il prezzo acquisto rientra già tramite venditeContrDash alla vendita
+  // Saldo cassa: fondo iniziale + (margN+pa per ogni vendita) - spese - mandati eseguiti + manuali
+  // Mandato acquisto -pa, poi vendita +(margN+pa): net = +margN
   const venditeContrDash=sales.reduce((a,v)=>a+margN(v.prezzo_vendita,v.prezzo_acquisto)+v.prezzo_acquisto,0);
   const speseContrDash=expenses.reduce((a,e)=>a+e.importo,0);
+  const mandatiEsegDash=(mandati||[]).filter(m=>m.stato==='eseguito').reduce((a,m)=>a+m.importo,0);
   const manEntrDash=(cassaMovimenti||[]).filter(m=>m.tipo==='entrata'&&m.fonte==='manuale').reduce((a,m)=>a+m.importo,0);
   const manUscDash=(cassaMovimenti||[]).filter(m=>m.tipo==='uscita'&&m.fonte==='manuale').reduce((a,m)=>a+m.importo,0);
-  const saldoCassa=fondoIniziale+venditeContrDash-speseContrDash+manEntrDash-manUscDash;
+  const saldoCassa=fondoIniziale+venditeContrDash-speseContrDash-mandatiEsegDash+manEntrDash-manUscDash;
   const {fat,mn,sp,iva,ivaGiaPagata,disp,scad,chart,pieD,rec,smLen}=useMemo(()=>{
     const oggi=new Date();
     const sm=sales.filter(s=>{const d=new Date(s.data_vendita);return d.getFullYear()===yr&&d.getMonth()===mo;});
@@ -898,16 +899,18 @@ const Bilancio=({sales,expenses,f24Records,cassaMovimenti,settings,cassaOps,mand
     sales.reduce((a,v)=>a+(v.prezzo_vendita-v.prezzo_acquisto),0)
     -expenses.reduce((a,e)=>a+e.importo,0)
     -f24Records.filter(r=>r.stato==='pagato').reduce((a,r)=>a+r.importo,0);
-  // Saldo cassa calcolato dai dati sorgente (immune a dati mancanti in cassaMovimenti)
-  // Logica: fondo iniziale + (margN + prezzoAcquisto per ogni auto venduta) - spese operative + manuali
-  // I mandati NON scalano il saldo qui: il prezzo acquisto rientra già tramite venditeContrib quando l'auto viene venduta
+  // Saldo cassa dai dati sorgente:
+  // - Mandato acquisto auto (eseguito): scala il saldo di -pa
+  // - Vendita auto: risale di +(margN + pa) → il prezzo acquisto rientra
+  // - Net buy+sell: -pa + (margN+pa) = +margN
   const venditeContrib=sales.reduce((a,v)=>a+margN(v.prezzo_vendita,v.prezzo_acquisto)+v.prezzo_acquisto,0);
   const speseContrib=expenses.reduce((a,e)=>a+e.importo,0);
+  const mandatiEseg=(mandati||[]).filter(m=>m.stato==='eseguito').reduce((a,m)=>a+m.importo,0);
   const manualEntrate=(cassaMovimenti||[]).filter(m=>m.tipo==='entrata'&&m.fonte==='manuale').reduce((a,m)=>a+m.importo,0);
   const manualUscite=(cassaMovimenti||[]).filter(m=>m.tipo==='uscita'&&m.fonte==='manuale').reduce((a,m)=>a+m.importo,0);
   const cassaEntrate=(cassaMovimenti||[]).filter(m=>m.tipo==='entrata').reduce((a,m)=>a+m.importo,0);
   const cassaUscite=(cassaMovimenti||[]).filter(m=>m.tipo==='uscita').reduce((a,m)=>a+m.importo,0);
-  const saldoAttuale=fondoIniziale+venditeContrib-speseContrib+manualEntrate-manualUscite;
+  const saldoAttuale=fondoIniziale+venditeContrib-speseContrib-mandatiEseg+manualEntrate-manualUscite;
   const saveMov=()=>{
     if(!movForm.descrizione||!movForm.importo)return;
     cassaOps.add({id:uid(),...movForm,fonte:'manuale',fonte_id:null});
