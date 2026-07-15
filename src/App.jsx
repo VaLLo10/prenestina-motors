@@ -279,12 +279,16 @@ const Sidebar = ({active,onNav,s,onLogout,open,onClose}) => (
   </div>
   </>
 );
-const Dashboard = ({cars,sales,expenses,f24,onNav,cassaMovimenti,settings}) => {
+const Dashboard = ({cars,sales,expenses,f24,onNav,cassaMovimenti,settings,mandati}) => {
   const yr=new Date().getFullYear(),mo=new Date().getMonth();
   const fondoIniziale=settings?.fondoCassaIniziale??200000;
-  const cassaEntrDash=(cassaMovimenti||[]).filter(m=>m.tipo==='entrata').reduce((a,m)=>a+m.importo,0);
-  const cassaUscDash=(cassaMovimenti||[]).filter(m=>m.tipo==='uscita').reduce((a,m)=>a+m.importo,0);
-  const saldoCassa=fondoIniziale+cassaEntrDash-cassaUscDash;
+  // Saldo cassa: fondo iniziale + (margN+pa per ogni vendita) - spese + manuali
+  // I mandati NON scalano il saldo: il prezzo acquisto rientra già tramite venditeContrDash alla vendita
+  const venditeContrDash=sales.reduce((a,v)=>a+margN(v.prezzo_vendita,v.prezzo_acquisto)+v.prezzo_acquisto,0);
+  const speseContrDash=expenses.reduce((a,e)=>a+e.importo,0);
+  const manEntrDash=(cassaMovimenti||[]).filter(m=>m.tipo==='entrata'&&m.fonte==='manuale').reduce((a,m)=>a+m.importo,0);
+  const manUscDash=(cassaMovimenti||[]).filter(m=>m.tipo==='uscita'&&m.fonte==='manuale').reduce((a,m)=>a+m.importo,0);
+  const saldoCassa=fondoIniziale+venditeContrDash-speseContrDash+manEntrDash-manUscDash;
   const {fat,mn,sp,iva,ivaGiaPagata,disp,scad,chart,pieD,rec,smLen}=useMemo(()=>{
     const oggi=new Date();
     const sm=sales.filter(s=>{const d=new Date(s.data_vendita);return d.getFullYear()===yr&&d.getMonth()===mo;});
@@ -883,7 +887,7 @@ const MandatiPagamento=({mandati,onAdd,onEdit,onDel,settings})=>{
 };
 const FONTE_LABEL={vendita:'Vendita',spesa:'Spesa',mandato:'Mandato',manuale:'Manuale'};
 const FONTE_COLOR={vendita:'green',spesa:'amber',mandato:'purple',manuale:'blue'};
-const Bilancio=({sales,expenses,f24Records,cassaMovimenti,settings,cassaOps})=>{
+const Bilancio=({sales,expenses,f24Records,cassaMovimenti,settings,cassaOps,mandati})=>{
   const [anno,setAnno]=useState(new Date().getFullYear());
   const [showMov,setShowMov]=useState(false);
   const [movForm,setMovForm]=useState({tipo:'entrata',data:today(),descrizione:'',importo:0});
@@ -894,11 +898,16 @@ const Bilancio=({sales,expenses,f24Records,cassaMovimenti,settings,cassaOps})=>{
     sales.reduce((a,v)=>a+(v.prezzo_vendita-v.prezzo_acquisto),0)
     -expenses.reduce((a,e)=>a+e.importo,0)
     -f24Records.filter(r=>r.stato==='pagato').reduce((a,r)=>a+r.importo,0);
-  // Saldo cassa = puro cash flow: fondoIniziale + tutti i movimenti in cassa
-  // Vendita: entra margN+prezzoAcquisto | Mandato eseguito: esce importo | Spesa: esce importo | Manuale: +/-
+  // Saldo cassa calcolato dai dati sorgente (immune a dati mancanti in cassaMovimenti)
+  // Logica: fondo iniziale + (margN + prezzoAcquisto per ogni auto venduta) - spese operative + manuali
+  // I mandati NON scalano il saldo qui: il prezzo acquisto rientra già tramite venditeContrib quando l'auto viene venduta
+  const venditeContrib=sales.reduce((a,v)=>a+margN(v.prezzo_vendita,v.prezzo_acquisto)+v.prezzo_acquisto,0);
+  const speseContrib=expenses.reduce((a,e)=>a+e.importo,0);
+  const manualEntrate=(cassaMovimenti||[]).filter(m=>m.tipo==='entrata'&&m.fonte==='manuale').reduce((a,m)=>a+m.importo,0);
+  const manualUscite=(cassaMovimenti||[]).filter(m=>m.tipo==='uscita'&&m.fonte==='manuale').reduce((a,m)=>a+m.importo,0);
   const cassaEntrate=(cassaMovimenti||[]).filter(m=>m.tipo==='entrata').reduce((a,m)=>a+m.importo,0);
   const cassaUscite=(cassaMovimenti||[]).filter(m=>m.tipo==='uscita').reduce((a,m)=>a+m.importo,0);
-  const saldoAttuale=fondoIniziale+cassaEntrate-cassaUscite;
+  const saldoAttuale=fondoIniziale+venditeContrib-speseContrib+manualEntrate-manualUscite;
   const saveMov=()=>{
     if(!movForm.descrizione||!movForm.importo)return;
     cassaOps.add({id:uid(),...movForm,fonte:'manuale',fonte_id:null});
@@ -1389,7 +1398,7 @@ export default function App() {
         {sec==='iva'&&<GestioneIVA sales={sales} settings={settings} f24={f24}/>}
         {sec==='f24'&&<F24Manager f24Records={f24} onAdd={fOps.add} onEdit={fOps.edit} onDel={fOps.del} settings={settings}/>}
         {sec==='mandati'&&<MandatiPagamento mandati={mandati} onAdd={mOps.add} onEdit={mOps.edit} onDel={mOps.del} settings={settings}/>}
-        {sec==='bilancio'&&<Bilancio sales={sales} expenses={expenses} f24Records={f24} cassaMovimenti={cassaMovimenti} settings={settings} cassaOps={cassaOps}/>}
+        {sec==='bilancio'&&<Bilancio sales={sales} expenses={expenses} f24Records={f24} cassaMovimenti={cassaMovimenti} settings={settings} cassaOps={cassaOps} mandati={mandati}/>}
         {sec==='impostazioni'&&<Impostazioni settings={settings} onSave={saveSettings}/>}
       </div>
       </div>
